@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 
+
 namespace rov{
 
 namespace tpl {
@@ -30,7 +31,8 @@ public:
         const SCALAR& t,
         const ct::core::ControlVector<CONTROL_DIM, SCALAR>& a,
         ct::core::StateVector<STATE_DIM, SCALAR>& derivative) override
-    {
+    {   
+
         SCALAR x = s(0);
         SCALAR y = s(1);
         SCALAR z = s(2);
@@ -48,6 +50,13 @@ public:
         SCALAR r = s(11); 
 
         // first part of state derivative is the position
+        double cpsi = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi);
+        double scpi = ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(psi);
+        double cphi = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi);
+        double sphi = ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi);
+        double cth = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta);
+        double sth = ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta);
+
 
         derivative(0) = w*(ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(psi) +
         ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)) -
@@ -71,7 +80,6 @@ public:
         derivative(5) = (ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*r + q*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi))/ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta);
 
         
-
         SCALAR f1 = a(0);
         SCALAR f2 = a(1);
         SCALAR f3 = a(2);
@@ -137,6 +145,7 @@ private:
     SCALAR Xu, Xuu, Yv, Yvv, Zw, Zww, Kp, Kpp, Mq, Mqq, Nr, Nrr;
     SCALAR Xudot, Yvdot, Zwdot, Kpdot, Mqdot, Nrdot;
     SCALAR B, W;
+
 };
 
 } // namespace rov
