@@ -8,20 +8,50 @@ int main(int argc, char** argv){
     const size_t state_dim = rov::ROV::STATE_DIM;
     const size_t control_dim = rov::ROV::CONTROL_DIM;
 
-    ct::core::ADCGScalar m(11.5), zG(0.02), Ix(0.16), Iy(0.16), Iz(0.16); 
-    ct::core::ADCGScalar Xudot(5.5), Yvdot(12.7), Zwdot(14.57), Kpdot(0.12), Mqdot(0.12), Nrdot(0.12);
+    // ct::core::ADCGScalar m(11.5), zG(0.02), Ix(0.16), Iy(0.16), Iz(0.16); 
+    // ct::core::ADCGScalar Xudot(5.5), Yvdot(12.7), Zwdot(14.57), Kpdot(0.12), Mqdot(0.12), Nrdot(0.12);
 
-    ct::core::ADCGScalar Xu(4.03), Xuu(18.18), Yv(6.22), Yvv(21.66), Zw(5.18), Zww(36.99);
-    ct::core::ADCGScalar Kp(0.07), Kpp(1.55), Mq(0.07), Mqq(1.55), Nr(0.07), Nrr(1.55);   
+    // ct::core::ADCGScalar Xu(4.03), Xuu(18.18), Yv(6.22), Yvv(21.66), Zw(5.18), Zww(36.99);
+    // ct::core::ADCGScalar Kp(0.07), Kpp(1.55), Mq(0.07), Mqq(1.55), Nr(0.07), Nrr(1.55);   
 
-    ct::core::ADCGScalar W(112.8), Bu(114.8);
+    // ct::core::ADCGScalar W(112.8), Bu(114.8);
    
-    std::shared_ptr<rov::tpl::ROV<ct::core::ADCGScalar>> rovdynamic (new 
-    rov::tpl::ROV<ct::core::ADCGScalar>(Ix, Iy, Iz, m, zG, Xu, Xuu, Yv, Yvv, 
-                                        Zw, Zww, Kp, Kpp, Mq, Mqq, Nr, Nrr, 
-                                        Xudot, Yvdot, Zwdot, Kpdot, Mqdot, Nrdot, Bu, W));
+    // std::shared_ptr<rov::tpl::ROV<ct::core::ADCGScalar>> rovdynamic (new 
+    // rov::tpl::ROV<ct::core::ADCGScalar>(Ix, Iy, Iz, m, zG, Xu, Xuu, Yv, Yvv, 
+    //                                     Zw, Zww, Kp, Kpp, Mq, Mqq, Nr, Nrr, 
+    //                                     Xudot, Yvdot, Zwdot, Kpdot, Mqdot, Nrdot, Bu, W));
 
-    ct::core::ADCodegenLinearizer<state_dim, control_dim> adLinearizer(rovdynamic);
+    double Ix, Iy, Iz;
+    double m;
+    double zG;
+    double Xu, Xuu, Yv, Yvv, Zw, Zww, Kp, Kpp, Mq, Mqq, Nr, Nrr;
+    double Xudot, Yvdot, Zwdot, Kpdot, Mqdot, Nrdot;
+    double B, W;
+
+    m = 11.5; // ControlSimulator simulation = ControlSimulator();
+    Zwdot = 14.57;
+    Kpdot = 0.12;
+    Mqdot = 0.12;
+    Nrdot = 0.12;
+
+    Xu = 4.03; Xuu = 18.18;  
+    Yv = 6.22; Yvv = 21.66;  
+    Zw = 5.18; Zww = 36.99;
+    Kp = 0.07; Kpp = 1.55;
+    Mq = 0.07; Mqq = 1.55;
+    Nr = 0.07; Nrr = 1.55;   
+
+    W = 112.8;
+    B = 114.8;
+
+    std::shared_ptr<rov::ROV> rovdynamic (new 
+    rov::ROV(Ix, Iy, Iz, m, zG, Xu, Xuu, Yv, Yvv, 
+            Zw, Zww, Kp, Kpp, Mq, Mqq, Nr, Nrr, 
+            Xudot, Yvdot, Zwdot, Kpdot, Mqdot, Nrdot, B, W));
+
+    std::shared_ptr<ct::core::SystemLinearizer<state_dim, control_dim>> adLinearizer(
+        new ct::core::SystemLinearizer<state_dim, control_dim>(rovdynamic)
+    );
     
     std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
         new ct::optcon::TermQuadratic<state_dim, control_dim>());
@@ -35,8 +65,6 @@ int main(int argc, char** argv){
         new CostFunctionAnalytical<state_dim, control_dim>());
     costFunction->addIntermediateTerm(intermediateCost);
     costFunction->addFinalTerm(finalCost);
-
-    adLinearizer.compileJIT();
 
     StateVector<state_dim> x0;
 

@@ -1,5 +1,7 @@
 #include <ct/optcon/optcon.h>
 #include "ROVdynamic.h"
+
+
 int main(int argc, char** argv){
     const size_t state_dim = rov::ROV::STATE_DIM;
     const size_t control_dim = rov::ROV::CONTROL_DIM;
@@ -11,7 +13,9 @@ int main(int argc, char** argv){
     ct::core::ADCGScalar Kp(0.07), Kpp(1.55), Mq(0.07), Mqq(1.55), Nr(0.07), Nrr(1.55);   
 
     ct::core::ADCGScalar W(112.8), Bu(114.8);
-   
+
+
+
     std::shared_ptr<rov::tpl::ROV<ct::core::ADCGScalar>> rovdynamic (new 
     rov::tpl::ROV<ct::core::ADCGScalar>(Ix, Iy, Iz, m, zG, Xu, Xuu, Yv, Yvv, 
                                         Zw, Zww, Kp, Kpp, Mq, Mqq, Nr, Nrr, 
@@ -19,6 +23,8 @@ int main(int argc, char** argv){
 
     ct::core::ADCodegenLinearizer<state_dim, control_dim> adLinearizer(rovdynamic);
     
+    
+
     adLinearizer.compileJIT();
 
     ct::core::StateVector<state_dim> x;
