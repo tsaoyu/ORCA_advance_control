@@ -3,6 +3,8 @@ import numpy as np
 from sympy import symbols, sin, cos, simplify, init_printing, poly,sinh
 from sympy.matrices import Matrix, eye, zeros, ones, diag
 from sympy.printing.cxxcode import cxxcode
+import re
+
 
 Ix, Iy, Iz = symbols('Ix Iy Iz')
 m = symbols('m')
@@ -48,7 +50,7 @@ i = 1
 for command in allocated_command:
     term = fit_param[0]* sinh(fit_param[1] * command) + fit_param[2]
     t_intermediate.append(term)
-    f.write('t{} = '.format(i) + str(term) + '\n')
+    f.write('t{} = '.format(i) + str(term) +  ';' + '\n')
     i += 1
 
 f.write('\n')
@@ -59,7 +61,7 @@ force = Matrix([t1, t2, t3,t4, t5, t6])
 
 i = 1
 for term in prop_matrix * force:
-    f.write('f{} = '.format(i) + str(term) + '\n')
+    f.write('f{} = '.format(i) + str(term) +  ';' + '\n')
     i += 1
 
 
@@ -167,21 +169,26 @@ J = Matrix([[cpsi * cth, - spsi * cphi + cpsi * sth * sphi, spsi * sphi + cpsi *
 
 etadot = simplify(J * nu)
 
+nudot = simplify(nudot)
+
+
 
 f.write('\n')
 f.write('Expression in C++11 flavour:\n')
 
-i = 0
-for term in nudot:
-    f.write('derivative({}) = '.format(i) + cxxcode(term, standard="c++11") + '\n')
-    i += 1 
-
 f.write('\n')
 f.write('Position derivatives: \n')
 
-
+i = 0
 for term in etadot:
-    f.write('derivative({}) = '.format(i) + cxxcode(term, standard="c++11") + '\n')
+    f.write('derivative({}) = '.format(i) + cxxcode(term) + ';' + '\n')
+    i += 1 
+
+f.write('\n')
+f.write('Velocity derivatives: \n')
+
+for term in nudot:
+    f.write('derivative({}) = '.format(i) + cxxcode(term) + ';' + '\n')
     i += 1 
 
 f.write('\n')
@@ -201,15 +208,62 @@ i = 1
 for command in allocated_command:
     term = fit_param[0]* sinh(fit_param[1] * command) + fit_param[2]
     t_intermediate.append(term)
-    f.write('t{} = '.format(i) + cxxcode(term, standard="c++11") + '\n')
+    f.write('t{} = '.format(i) + cxxcode(term, standard="c++11") + ';' + '\n')
     i += 1
 
-# sim_nudot = simplify(nudot)
-# sim_etadot = simplify(etadot)
+def ct_subs(raw_content):
 
-# for n in sim_nudot:
-#     print(cxxcode(n, standard="c++11") + '\n')
+    raw_content = re.sub(r'cos\(', r'ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(', raw_content)
+    raw_content = re.sub(r'sin\(', r'ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(', raw_content)
+    raw_content = re.sub(r'cosh\(', r'ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(', raw_content)
+    raw_content = re.sub(r'sinh\(', r'ct::core::tpl::TraitSelector<SCALAR>::Trait::sinh(', raw_content)
+    raw_content = re.sub(r'([a-zA-Z0-9]+)\*\*2', r'\1*\1', raw_content)
+    raw_content = re.sub(r'Abs\(([a-zA-Z0-9]+)\)', r'ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(\1)', raw_content)
+    raw_content = re.sub(r'\[', ' ', raw_content)
+    raw_content = re.sub(r'\]', ' ', raw_content)
+    raw_content = re.sub(r'matrix\(', ' ', raw_content)
+    return raw_content
 
-# for n in sim_etadot:
-#     print(cxxcode(n, standard="c++11") + '\n')
+f.write('\n')
+f.write('Expression in C++11 flavour for Control Toolbox:\n')
+
+f.write('\n')
+f.write('Position derivatives: \n')
+
+i = 0
+for term in etadot:
+    f.write('derivative({}) = '.format(i) + ct_subs(str(term)) + ';' +  '\n')
+    i += 1 
+
+f.write('\n')
+f.write('Velocity derivatives: \n')
+
+for term in nudot:
+    f.write('derivative({}) = '.format(i) + ct_subs(str(term)) + ';' + '\n')
+    i += 1 
+
+
+
+f.write('\n')
+f.write('Intermediates to include: \n')
+trig = {'cpsi': cos(psi),
+        'spsi': sin(psi),
+        'cphi': cos(phi),
+        'sphi': sin(phi),
+        'cth' :cos(theta),
+        'sth' :sin(theta)}
+for k, v in trig.items():
+    f.write(str(k) + ' = '+ ct_subs(str(v)) + ';' +  '\n')
+
+f.write('\n')
+f.write('Thruster intermediate variables: \n')
+i = 1
+for command in allocated_command:
+    term = fit_param[0]* sinh(fit_param[1] * command) + fit_param[2]
+    t_intermediate.append(term)
+    f.write('t{} = '.format(i) + ct_subs(str(term)) + ';' + '\n')
+    i += 1
+
+
+
 

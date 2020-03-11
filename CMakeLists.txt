@@ -137,7 +137,7 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(rov_node src/ROV_main.cpp)
-# add_executable(rov_ad_test src/ROV_linearizer.cpp)
+add_executable(rov_ad_test src/LQR_controller.cpp)
 # # add_executable(rov_iLQR src/iLQR_control.cpp)
 # add_executable(rov_simulator src/ROV_simulation.cpp)
 
@@ -154,12 +154,12 @@ add_executable(rov_node src/ROV_main.cpp)
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(rov_node
-  ${catkin_LIBRARIES} ct_core ct_optcon
+  ${catkin_LIBRARIES} ct_optcon
 )
 
-# target_link_libraries(rov_ad_test
-#   ${catkin_LIBRARIES} ct_core ct_optcon
-# )
+target_link_libraries(rov_ad_test
+  ${catkin_LIBRARIES} ct_optcon
+)
 
 # # target_link_libraries(rov_iLQR
 # #   ${catkin_LIBRARIES} ct_core ct_optcon
