@@ -58,34 +58,24 @@ public:
         double sth = ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta);
 
 
-        derivative(0) = w*(ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(psi) +
-        ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)) -
-        v*(ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(psi) - 
-        ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)) +
-        ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*u;
-        
-        derivative(1) = v*(ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi) + 
-        ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(psi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)) -
-         w*(ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)
-        
-        - ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(psi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)) +
-         ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*u*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(psi); 
-        
-        derivative(2) = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*w - u*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta) + ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*v*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi); 
-        
-        derivative(3) =  p + (ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*r*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta))/ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta) + (q*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta))/ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta) ;
-        
-        derivative(4) = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*q - r*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi); 
-        
-        derivative(5) = (ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(phi)*r + q*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi))/ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta);
+        derivative(0) = x*std::cos(psi)*std::cos(theta) + y*(std::sin(phi)*std::sin(theta)*std::cos(psi) - std::sin(psi)*std::cos(phi)) + z*(std::sin(phi)*std::sin(psi) + std::sin(theta)*std::cos(phi)*std::cos(psi));
 
-        
-        SCALAR f1 = a(0);
-        SCALAR f2 = a(1);
-        SCALAR f3 = a(2);
-        SCALAR f4 = a(3);
-        SCALAR f5 = a(4);
-        SCALAR f6 = a(5);
+        derivative(1) = x*std::sin(psi)*std::cos(theta) + y*(std::sin(phi)*std::sin(psi)*std::sin(theta) + std::cos(phi)*std::cos(psi)) - z*(std::sin(phi)*std::cos(psi) - std::sin(psi)*std::sin(theta)*std::cos(phi));
+
+        derivative(2) = -x*std::sin(theta) + y*std::sin(phi)*std::cos(theta) + z*std::cos(phi)*std::cos(theta);
+
+        derivative(3) = phi + psi*std::cos(phi)*std::tan(theta) + theta*std::sin(phi)*std::tan(theta);
+
+        derivative(4) = -psi*std::sin(phi) + theta*std::cos(phi);
+
+        derivative(5) = (psi*std::cos(phi) + theta*std::sin(phi))/std::cos(theta);
+
+        SCALAR t1 = a(0);
+        SCALAR t2 = a(1);
+        SCALAR t3 = a(2);
+        SCALAR t4 = a(3);
+        SCALAR t5 = a(4);
+        SCALAR t6 = a(5);
         
         // Thruster model 
         // normalised control command between -1 and 1
@@ -124,17 +114,17 @@ public:
 
         // second part is the velocity
 
-        derivative(6) = ((Iy + Mqdot)*(f1 - q*(Zwdot*w + m*w) - u*(Xu + Xuu*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(u * u)) + ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)*(B - W) + m*v*r))/(Iy*Xudot + Mqdot*Xudot - m*m*zG*zG + Iy*m + Mqdot*m) - (m*zG*(f5 + w*(Xudot*u - m*u) - u*(Zwdot*w - m*v) - q*(Mq + Mqq*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(q * q)) - r*(Ix*p - Kpdot*p) + p*(Iz*r - Nrdot*r) + W*zG*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)))/(Iy*Xudot + Mqdot*Xudot - m*m*zG*zG + Iy*m + Mqdot*m) ; 
+        derivative(6) =  -(m*zG*(W*zG*std::sin(theta) + p*psi*(Ix - Kpdot) - phi*r*(Iz - Nrdot) - t5 + theta*(Mq + Mqq*std::fabs(q)) - u*z*(Xudot - m) + w*x*(Zwdot - m)) + (Iy + Mqdot)*(m*psi*v + t1 + theta*w*(Zwdot - m) - x*(Xu + Xuu*std::fabs(u)) + (B - W)*std::sin(theta)))/(std::pow(m, 2)*std::pow(zG, 2) - (Iy + Mqdot)*(Xudot + m));
 
-        derivative(7) = ((Ix + Kpdot)*(f2 + r*(Xudot*u - m*u) + p*(Zwdot*w + m*w) - v*(Yv + Yvv*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(v * v)) - ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*(B - W)))/(Ix*Yvdot + Kpdot*Yvdot - m*m*zG*zG + Ix*m + Kpdot*m) + (m*zG*(f4 - w*(Yvdot*v - m*v) + v*(Zwdot*w - m*w) - p*(Kp + Kpp*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(p * p)) + r*(Iy*q - Mqdot*q) - q*(Iz*r - Nrdot*r) + W*zG*ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)))/(Ix*Yvdot + Kpdot*Yvdot - m*m*zG*zG + Ix*m + Kpdot*m);
+        derivative(7) = (m*zG*(W*zG*std::sin(phi)*std::cos(theta) + phi*(Kp + Kpp*std::fabs(p)) - psi*q*(Iy - Mqdot) + r*theta*(Iz - Nrdot) - t4 + v*z*(Yvdot - m) - w*y*(Zwdot - m)) + (Ix + Kpdot)*(phi*w*(Zwdot - m) - psi*u*(Xudot - m) - t2 + y*(Yv + Yvv*std::fabs(v)) + (B - W)*std::sin(phi)*std::cos(theta)))/(std::pow(m, 2)*std::pow(zG, 2) - (Ix + Kpdot)*(Yvdot + m));
 
-        derivative(8) =  -(q*(Xudot*u - m*u) - f3 - p*(Yvdot*v - m*v) + w*(Zw + Zww*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(w * w)) + ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*(B - W))/(Zwdot + m);
+        derivative(8) = (phi*v*(Yvdot - m) + t3 - theta*u*(Xudot - m) - z*(Zw + Zww*std::fabs(w)) + (-B + W)*std::cos(phi)*std::cos(theta))/(Zwdot + m);
 
-        derivative(9) = ((Yvdot + m)*(f4 - w*(Yvdot*v - m*v) + v*(Zwdot*w - m*w) - p*(Kp + Kpp*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(p * p)) + r*(Iy*q - Mqdot*q) - q*(Iz*r - Nrdot*r) + W*zG*ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)))/(Ix*Yvdot + Kpdot*Yvdot - m*m*zG*zG + Ix*m + Kpdot*m) + (m*zG*(f2 + r*(Xudot*u - m*u) + p*(Zwdot*w + m*w) - v*(Yv + Yvv*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(v * v)) - ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(theta)*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(phi)*(B - W)))/(Ix*Yvdot + Kpdot*Yvdot - m*m*zG*zG + Ix*m + Kpdot*m) ;
+        derivative(9) = (m*zG*(phi*w*(Zwdot - m) - psi*u*(Xudot - m) - t2 + y*(Yv + Yvv*std::fabs(v)) + (B - W)*std::sin(phi)*std::cos(theta)) + (Yvdot + m)*(W*zG*std::sin(phi)*std::cos(theta) + phi*(Kp + Kpp*std::fabs(p)) - psi*q*(Iy - Mqdot) + r*theta*(Iz - Nrdot) - t4 + v*z*(Yvdot - m) - w*y*(Zwdot - m)))/(std::pow(m, 2)*std::pow(zG, 2) - (Ix + Kpdot)*(Yvdot + m));
 
-        derivative(10) = ((Xudot + m)*(f5 + w*(Xudot*u - m*u) - u*(Zwdot*w - m*v) - q*(Mq + Mqq*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(q * q)) - r*(Ix*p - Kpdot*p) + p*(Iz*r - Nrdot*r) + W*zG*ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)))/(Iy*Xudot + Mqdot*Xudot - m*m*zG*zG + Iy*m + Mqdot*m) - (m*zG*(f1 - q*(Zwdot*w + m*w) - u*(Xu + Xuu*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(u * u)) + ct::core::tpl::TraitSelector<SCALAR>::Trait::sin(theta)*(B - W) + m*v*r))/(Iy*Xudot + Mqdot*Xudot - m*m*zG*zG + Iy*m + Mqdot*m);
+        derivative(10) = (m*zG*(m*psi*v + t1 + theta*w*(Zwdot - m) - x*(Xu + Xuu*std::fabs(u)) + (B - W)*std::sin(theta)) + (Xudot + m)*(W*zG*std::sin(theta) + p*psi*(Ix - Kpdot) - phi*r*(Iz - Nrdot) - t5 + theta*(Mq + Mqq*std::fabs(q)) - u*z*(Xudot - m) + w*x*(Zwdot - m)))/(std::pow(m, 2)*std::pow(zG, 2) - (Iy + Mqdot)*(Xudot + m));
 
-        derivative(11) =   (f6 - v*(Xudot*u - m*u) + u*(Yvdot*v - m*v) - r*(Nr + Nrr*ct::core::tpl::TraitSelector<SCALAR>::Trait::sqrt(r * r)) + q*(Ix*p - Kpdot*p) - p*(Iy*q - Mqdot*q))/(Iz + Nrdot);
+        derivative(11) = (p*theta*(Ix - Kpdot) - phi*q*(Iy - Mqdot) - psi*(Nr + Nrr*std::fabs(r)) + t6 - u*y*(Xudot - m) + v*x*(Yvdot - m))/(Iz + Nrdot);
     
     }
 private:

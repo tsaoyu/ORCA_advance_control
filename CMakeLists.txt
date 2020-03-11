@@ -120,7 +120,7 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
-  include/my_ct_project
+  include/ORCA_advance_control
 )
 
 ## Declare a C++ library

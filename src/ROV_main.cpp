@@ -11,7 +11,7 @@ int main(int argc, char** argv){
 
     ct::core::StateVector<state_dim> x;
     x.setZero();
-    x(2) = 5;
+   
     double Ix, Iy, Iz;
     double m;
     double zG;
@@ -41,7 +41,7 @@ int main(int argc, char** argv){
 
     double dt = 0.01;
     ct::core::Time t0 = 0.0;
-    size_t nSteps = 1000000;
+    size_t nSteps = 1000;
     integrator.integrate_n_steps(x, t0, nSteps, dt);
     // print the new state
     std::cout << "state after integration: " << x.transpose() << std::endl;
