@@ -138,7 +138,7 @@ include_directories(
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(rov_node src/ROV_main.cpp)
 add_executable(rov_ad_test src/LQR_controller.cpp)
-# # add_executable(rov_iLQR src/iLQR_control.cpp)
+add_executable(rov_iLQR src/iLQR_controller.cpp)
 # add_executable(rov_simulator src/ROV_simulation.cpp)
 
 ## Rename C++ executable without prefix
@@ -161,9 +161,10 @@ target_link_libraries(rov_ad_test
   ${catkin_LIBRARIES} ct_optcon
 )
 
-# # target_link_libraries(rov_iLQR
-# #   ${catkin_LIBRARIES} ct_core ct_optcon
-# # )
+
+target_link_libraries(rov_iLQR
+  ${catkin_LIBRARIES} ct_core ct_optcon
+)
 
 # target_link_libraries(rov_simulator
 #   ${catkin_LIBRARIES} ct_core ct_optcon
