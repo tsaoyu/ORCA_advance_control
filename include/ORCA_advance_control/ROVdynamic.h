@@ -108,7 +108,7 @@ public:
 
     }
 
-    void updateManualControl(const ct::core::ControlVector<CONTROL_DIM, SCALAR>& control)
+    void updateManualControl(const ct::core::ControlVector<CONTROL_DIM, SCALAR>& control) override
     {
        ROV::manualcontrolAction_ = control;
        ROV::isManual_ = true;

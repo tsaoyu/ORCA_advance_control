@@ -13,7 +13,7 @@ class DynamicSimulator{
         ros::Publisher odom_pub;
         ros::Subscriber cmd_wrench_sub;
         std::shared_ptr<rov::ROV> rovdynamic;
-        std::shared_ptr<ct::core::Integrator<rov::ROV::STATE_DIM>> integrator;
+        ct::core::Integrator<rov::ROV::STATE_DIM> integrator;
         ct::core::StateVector<rov::ROV::STATE_DIM> x;
         bool first_received = true;
         double rostime_now; 
@@ -23,6 +23,7 @@ class DynamicSimulator{
     public:
 
         DynamicSimulator(ros::NodeHandle *n){
+            DynamicSimulator::create_controlled_system();
             odom_pub = n->advertise<nav_msgs::Odometry>("/BodyROV01/odom", 10);
             cmd_wrench_sub = n->subscribe("/cmd_wrench", 10,  &DynamicSimulator::callback_cmd_wrench, this);
 
@@ -31,7 +32,7 @@ class DynamicSimulator{
         void create_controlled_system(){
             const size_t state_dim = rov::ROV::STATE_DIM;
             const size_t control_dim = rov::ROV::CONTROL_DIM;
-            ct::core::StateVector<state_dim> x;
+           
             x.setZero();
         
             double Ix, Iy, Iz;
@@ -61,13 +62,17 @@ class DynamicSimulator{
 
             W = 112.8;
             B = 114.8;
-
+            
             std::shared_ptr<rov::ROV> rovdynamic (new rov::ROV(Ix, Iy, Iz, m, zG, Xu, Xuu, Yv, 
                                                                Yvv, Zw, Zww, Kp, Kpp, Mq, Mqq,
                                                                Nr, Nrr, Xudot, Yvdot, Zwdot, 
                                                                Kpdot, Mqdot, Nrdot, B, W));
+            // auto rovdynamic = std::make_shared<rov::ROV> ( rov::ROV(Ix, Iy, Iz, m, zG, Xu, Xuu, Yv, 
+            //                                                    Yvv, Zw, Zww, Kp, Kpp, Mq, Mqq,
+            //                                                    Nr, Nrr, Xudot, Yvdot, Zwdot, 
+            //                                                    Kpdot, Mqdot, Nrdot, B, W));
 
-            ct::core::Integrator<state_dim> integrator(rovdynamic);
+            ct::core::Integrator<rov::ROV::STATE_DIM> integrator(rovdynamic);
             
 
         }
@@ -98,12 +103,13 @@ class DynamicSimulator{
             manual_control(1) = fy;
             manual_control(2) = fz;
             manual_control(3) = tz;
-            rovdynamic -> updateManualControl(manual_control);
-            
+
+            rovdynamic->updateManualControl(manual_control);
+
             double dt = ros::Time::now().toSec() - rostime_now;
             t_final = t_now + dt;
             rostime_now = ros::Time::now().toSec();
-            integrator -> integrate_adaptive(x, t_now, t_final);
+            integrator.integrate_adaptive(x, t_now, t_final);
             t_now = t_final;
 
         }
@@ -143,7 +149,7 @@ class DynamicSimulator{
 
 
 
-int main(int argc, char** argv){
+int main(int argc, char **argv){
 
     ros::init(argc, argv, "manual_control_simulator_node");
     ros::NodeHandle n;
