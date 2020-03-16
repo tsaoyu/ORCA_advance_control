@@ -28,7 +28,12 @@ int main(int argc, char** argv){
     double Xudot, Yvdot, Zwdot, Kpdot, Mqdot, Nrdot;
     double B, W;
 
-    m = 11.5; // ControlSimulator simulation = ControlSimulator();
+    Ix = 0.16; Iy = 0.16; Iz = 0.16;
+    m = 11.5;
+    zG = 0.08;
+
+    Xudot = 5.5;
+    Yvdot = 12.7; 
     Zwdot = 14.57;
     Kpdot = 0.12;
     Mqdot = 0.12;

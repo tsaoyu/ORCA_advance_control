@@ -1,23 +1,23 @@
 ilqr
 {
     nlocp_algorithm GNMS
-    integrator EulerCT
+    integrator RK78
     useSensitivityIntegrator false
     discretization Forward_euler
     timeVaryingDiscretization false
-    dt 0.001
+    dt 0.01
     K_sim 1
     K_shot 1
     epsilon 0
-    max_iterations 1000
+    max_iterations 12
     fixedHessianCorrection false
     recordSmallestEigenvalue false
     min_cost_improvement 1e-5
     maxDefectSum 1e-5
     meritFunctionRho 0.0
     meritFunctionRhoConstraints 0.0
-    nThreads 4
-    nThreadsEigen 4
+    nThreads 1
+    nThreadsEigen 1
     locp_solver GNRICCATI_SOLVER
     printSummary true
     debugPrint false 
@@ -26,7 +26,7 @@ ilqr
     line_search
     {
         type NONE
-        adaptive true
+        adaptive false
         maxIterations 1000
         alpha_0 1.0
         n_alpha 0.5
@@ -35,7 +35,7 @@ ilqr
 
     lqoc_solver_settings
     {
-        lqoc_debug_print        true
+        lqoc_debug_print        false
         num_lqoc_iterations  	20
     }
 }
