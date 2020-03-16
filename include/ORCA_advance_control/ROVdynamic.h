@@ -107,6 +107,14 @@ public:
 
 
     }
+
+    void updateManualControl(const ct::core::ControlVector<CONTROL_DIM, SCALAR>& control)
+    {
+       ROV::manualcontrolAction_ = control;
+       ROV::isManual_ = true;
+
+    }
+
 private:
     
     SCALAR Ix, Iy, Iz;
