@@ -69,10 +69,10 @@ class DynamicSimulator{
 
             
             this->rovdynamic_ptr = rovdynamic;
-            ct::core::ControlVector<control_dim> manual_control;
+            this->integrator = new ct::core::Integrator<rov::ROV::STATE_DIM>(this->rovdynamic_ptr, ct::core::IntegrationType::ODE45);
 
-            this->integrator = new ct::core::Integrator<rov::ROV::STATE_DIM>(this->rovdynamic_ptr);
-          
+            x.setZero();
+            x(8) = 10;
 
         }
 
@@ -85,7 +85,6 @@ class DynamicSimulator{
                 DynamicSimulator::reset_time();
                 first_received = false;
                 rostime_now = ros::Time::now().toSec();
-                x.setZero();
                 return ;
 
             }
@@ -110,7 +109,7 @@ class DynamicSimulator{
             t_final = t_now + dt;
             rostime_now = ros::Time::now().toSec();
             const size_t nSteps = 10;
-            this -> integrator -> integrate_n_steps(x, t_now, nSteps, dt);
+            this -> integrator -> integrate_adaptive(x, t_now, t_final);
             t_now = t_final;
 
         }
@@ -122,25 +121,24 @@ class DynamicSimulator{
             odom.header.stamp = ros::Time::now();
             
             tf2::Quaternion q;
-            q.setRPY(x(3), x(4), x(5));
+            q.setRPY(x(9), x(10), x(11));
 
-            odom.pose.pose.position.x = x(0);
-            odom.pose.pose.position.y = x(1);
-            odom.pose.pose.position.z = x(2);
+            odom.twist.twist.linear.x = x(0);
+            odom.twist.twist.linear.y = x(1); 
+            odom.twist.twist.linear.z = x(2); 
 
-           
+            odom.twist.twist.linear.x = x(3);
+            odom.twist.twist.linear.y = x(4); 
+            odom.twist.twist.linear.z = x(5); 
+
+            odom.pose.pose.position.x = x(6);
+            odom.pose.pose.position.y = x(7);
+            odom.pose.pose.position.z = x(8);
+
             odom.pose.pose.orientation.x = q[0];
             odom.pose.pose.orientation.y = q[1];
             odom.pose.pose.orientation.z = q[2];
             odom.pose.pose.orientation.w = q[3]; 
-
-            odom.twist.twist.linear.x = x(6);
-            odom.twist.twist.linear.y = x(7); 
-            odom.twist.twist.linear.z = x(8); 
-
-            odom.twist.twist.linear.x = x(9);
-            odom.twist.twist.linear.y = x(10); 
-            odom.twist.twist.linear.z = x(11); 
 
             odom_pub.publish(odom);
 
