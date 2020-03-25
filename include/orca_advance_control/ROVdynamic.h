@@ -33,21 +33,23 @@ public:
         ct::core::StateVector<STATE_DIM, SCALAR>& derivative) override
     {   
 
-        SCALAR x = s(0);
-        SCALAR y = s(1);
-        SCALAR z = s(2);
+        SCALAR u = s(0);
+        SCALAR v = s(1);
+        SCALAR w = s(2);
 
-        SCALAR phi = s(3);
-        SCALAR theta = s(4);
-        SCALAR psi = s(5);
+        SCALAR p = s(3);
+        SCALAR q = s(4);
+        SCALAR r = s(5); 
 
-        SCALAR u = s(6);
-        SCALAR v = s(7);
-        SCALAR w = s(8);
+        SCALAR x = s(6);
+        SCALAR y = s(7);
+        SCALAR z = s(8);
 
-        SCALAR p = s(9);
-        SCALAR q = s(10);
-        SCALAR r = s(11); 
+        SCALAR phi = s(9);
+        SCALAR theta = s(10);
+        SCALAR psi = s(11);
+
+        
 
         // Thruster model 
         // normalised control command between -1 and 1
@@ -86,21 +88,22 @@ public:
         
         // first part of state derivative is the velocity
 
-        derivative(0) = -(m*zG*(W*sth*zG + f5 + p*psi*(Ix - Kpdot) - phi*r*(Iz - Nrdot) + theta*(Mq + Mqq*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(q)) - u*z*(Xudot - m) + w*x*(Zwdot - m)) + (Iy + Mqdot)*(-f1 + m*psi*v + sth*(B - W) + theta*w*(Zwdot - m) - x*(Xu + Xuu*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(u))))/(m*m*zG*zG - (Iy + Mqdot)*(Xudot + m));
-        derivative(1) = (m*zG*(W*cth*sphi*zG + f4 + phi*(Kp + Kpp*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(p)) - psi*q*(Iy - Mqdot) + r*theta*(Iz - Nrdot) + v*z*(Yvdot - m) - w*y*(Zwdot - m)) + (Ix + Kpdot)*(cth*sphi*(B - W) + f2 + phi*w*(Zwdot - m) - psi*u*(Xudot - m) + y*(Yv + Yvv*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(v))))/(m*m*zG*zG - (Ix + Kpdot)*(Yvdot + m));
-        derivative(2) = (-cphi*cth*(B - W) - f3 + phi*v*(Yvdot - m) - theta*u*(Xudot - m) - z*(Zw + Zww*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(w)))/(Zwdot + m);
-        derivative(3) = (m*zG*(cth*sphi*(B - W) + f2 + phi*w*(Zwdot - m) - psi*u*(Xudot - m) + y*(Yv + Yvv*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(v))) + (Yvdot + m)*(W*cth*sphi*zG + f4 + phi*(Kp + Kpp*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(p)) - psi*q*(Iy - Mqdot) + r*theta*(Iz - Nrdot) + v*z*(Yvdot - m) - w*y*(Zwdot - m)))/(m*m*zG*zG - (Ix + Kpdot)*(Yvdot + m));
-        derivative(4) = (m*zG*(-f1 + m*psi*v + sth*(B - W) + theta*w*(Zwdot - m) - x*(Xu + Xuu*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(u))) + (Xudot + m)*(W*sth*zG + f5 + p*psi*(Ix - Kpdot) - phi*r*(Iz - Nrdot) + theta*(Mq + Mqq*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(q)) - u*z*(Xudot - m) + w*x*(Zwdot - m)))/(m*m*zG*zG - (Iy + Mqdot)*(Xudot + m));
-        derivative(5) = (-f6 + p*theta*(Ix - Kpdot) - phi*q*(Iy - Mqdot) - psi*(Nr + Nrr*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(r)) - u*y*(Xudot - m) + v*x*(Yvdot - m))/(Iz + Nrdot);
+        derivative(0) = -(m*zG*(W*sth*zG - f5 + p*r*(Ix - Kpdot) - p*r*(Iz - Nrdot) + q*(Mq + Mqq*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(q)) - u*w*(Xudot - m) + u*w*(Zwdot - m)) + (Iy + Mqdot)*(f1 + m*r*v + q*w*(Zwdot - m) + sth*(B - W) - u*(Xu + Xuu*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(u))))/(m*m*zG*zG - (Iy + Mqdot)*(Xudot + m));
+        derivative(1) = (m*zG*(W*cth*sphi*zG - f4 + p*(Kp + Kpp*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(p)) - q*r*(Iy - Mqdot) + q*r*(Iz - Nrdot) + v*w*(Yvdot - m) - v*w*(Zwdot - m)) + (Ix + Kpdot)*(cth*sphi*(B - W) - f2 + p*w*(Zwdot - m) - r*u*(Xudot - m) + v*(Yv + Yvv*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(v))))/(m*m*zG*zG - (Ix + Kpdot)*(Yvdot + m));
+        derivative(2) = (-cphi*cth*(B - W) + f3 + p*v*(Yvdot - m) - q*u*(Xudot - m) - w*(Zw + Zww*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(w)))/(Zwdot + m);
+        derivative(3) = (m*zG*(cth*sphi*(B - W) - f2 + p*w*(Zwdot - m) - r*u*(Xudot - m) + v*(Yv + Yvv*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(v))) + (Yvdot + m)*(W*cth*sphi*zG - f4 + p*(Kp + Kpp*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(p)) - q*r*(Iy - Mqdot) + q*r*(Iz - Nrdot) + v*w*(Yvdot - m) - v*w*(Zwdot - m)))/(m*m*zG*zG - (Ix + Kpdot)*(Yvdot + m));
+        derivative(4) = (m*zG*(f1 + m*r*v + q*w*(Zwdot - m) + sth*(B - W) - u*(Xu + Xuu*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(u))) + (Xudot + m)*(W*sth*zG - f5 + p*r*(Ix - Kpdot) - p*r*(Iz - Nrdot) + q*(Mq + Mqq*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(q)) - u*w*(Xudot - m) + u*w*(Zwdot - m)))/(m*m*zG*zG - (Iy + Mqdot)*(Xudot + m));
+        derivative(5) = (f6 + p*q*(Ix - Kpdot) - p*q*(Iy - Mqdot) - r*(Nr + Nrr*ct::core::tpl::TraitSelector<SCALAR>::Trait::fabs(r)) - u*v*(Xudot - m) + u*v*(Yvdot - m))/(Iz + Nrdot);
+
 
         // second part is the position
 
-        derivative(6) = cpsi*cth*x - y*(cphi*spsi - cpsi*sphi*sth) + z*(cphi*cpsi*sth + sphi*spsi);
-        derivative(7) = cth*spsi*x + y*(cphi*cpsi + sphi*spsi*sth) + z*(cphi*spsi*sth - cpsi*sphi);
-        derivative(8) = cphi*cth*z + cth*sphi*y - sth*x;
-        derivative(9) = (cphi*psi*sth + cth*phi + sphi*sth*theta)/cth;
-        derivative(10) = cphi*theta - psi*sphi;
-        derivative(11) = (cphi*psi + sphi*theta)/cth;
+        derivative(6) = cpsi*cth*u - v*(cphi*spsi - cpsi*sphi*sth) + w*(cphi*cpsi*sth + sphi*spsi);
+        derivative(7) = cth*spsi*u + v*(cphi*cpsi + sphi*spsi*sth) + w*(cphi*spsi*sth - cpsi*sphi);
+        derivative(8) = cphi*cth*w + cth*sphi*v - sth*u;
+        derivative(9) = (cphi*r*sth + cth*p + q*sphi*sth)/cth;
+        derivative(10) = cphi*q - r*sphi;
+        derivative(11) = (cphi*r + q*sphi)/cth;
         
         // std::cout << std::showpos;
         // std::cout << std::showpoint;
