@@ -2,7 +2,7 @@ cmake_minimum_required(VERSION 2.8.3)
 project(orca_advance_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
-add_compile_options(-std=c++14)
+add_compile_options(-pthread -std=c++14 -Wall -Wfatal-errors)
 
 ## Find catkin macros and libraries
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
@@ -14,6 +14,10 @@ find_package(catkin REQUIRED COMPONENTS
   ct_rbd
   roscpp
 )
+
+set(CONFIG_DIR "${CMAKE_CURRENT_SOURCE_DIR}/config")
+
+configure_file(src/configDir.h.in ${CMAKE_CURRENT_SOURCE_DIR}/include/configDir.h)
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -106,7 +110,7 @@ find_package(catkin REQUIRED COMPONENTS
 ## DEPENDS: system dependencies of this project that dependent projects also need
 catkin_package(
  INCLUDE_DIRS include
- LIBRARIES my_ct_project
+ LIBRARIES orca_advance_control
  CATKIN_DEPENDS ct_core ct_models ct_optcon ct_rbd roscpp
 #  DEPENDS system_lib
 )
@@ -118,9 +122,10 @@ catkin_package(
 ## Specify additional locations of header files
 ## Your package locations should be listed before other locations
 include_directories(
-# include
+  include
   ${catkin_INCLUDE_DIRS}
-  include/ORCA_advance_control
+  include/orca_advance_control
+
 )
 
 ## Declare a C++ library
@@ -137,10 +142,10 @@ include_directories(
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
 add_executable(rov_node src/ROV_main.cpp)
-add_executable(test_dynamics src/ROV_dynamic_test.cpp)
 add_executable(rov_ad_test src/LQR_controller.cpp)
 add_executable(rov_iLQR src/iLQR_controller.cpp)
-# add_executable(rov_simulator src/ROV_simulation.cpp)
+add_executable(rov_MPC src/MPC_controller.cpp)
+add_executable(rov_MPC_node src/mpc_controller_node.cpp)
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -155,25 +160,27 @@ add_executable(rov_iLQR src/iLQR_controller.cpp)
 ## Specify libraries to link a library or executable target against
 
 target_link_libraries(rov_node
-  ${catkin_LIBRARIES} ct_optcon
+  ${catkin_LIBRARIES} ct_optcon 
 )
 
-target_link_libraries(test_dynamics
-  ${catkin_LIBRARIES} ct_optcon
-)
 
 target_link_libraries(rov_ad_test
-  ${catkin_LIBRARIES} ct_optcon
+  ${catkin_LIBRARIES} ct_optcon 
 )
 
 
 target_link_libraries(rov_iLQR
-  ${catkin_LIBRARIES} ct_core ct_optcon
+  ${catkin_LIBRARIES} ct_optcon 
 )
 
-# target_link_libraries(rov_simulator
-#   ${catkin_LIBRARIES} ct_core ct_optcon
-# )
+target_link_libraries(rov_MPC
+  ${catkin_LIBRARIES} ct_optcon 
+)
+
+target_link_libraries(rov_MPC_node
+  ${catkin_LIBRARIES} ct_optcon 
+)
+
 
 #############
 ## Install ##
@@ -204,11 +211,11 @@ target_link_libraries(rov_iLQR
 # )
 
 ## Mark cpp header files for installation
-# install(DIRECTORY include/${PROJECT_NAME}/
-#   DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
-#   FILES_MATCHING PATTERN "*.h"
-#   PATTERN ".svn" EXCLUDE
-# )
+install(DIRECTORY include/${PROJECT_NAME}/
+  DESTINATION ${CATKIN_PACKAGE_INCLUDE_DESTINATION}
+  FILES_MATCHING PATTERN "*.h"
+  PATTERN ".svn" EXCLUDE
+)
 
 ## Mark other files for installation (e.g. launch and bag files, etc.)
 # install(FILES
