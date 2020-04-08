@@ -1,13 +1,13 @@
 from __future__ import division
 import numpy as np
-from sympy import symbols, sin, cos, simplify, init_printing, poly,sinh, exp
+from sympy import Symbol, symbols, sin, cos, simplify, init_printing, poly,sinh, exp, N
 from sympy.matrices import Matrix, eye, zeros, ones, diag
 from sympy.printing.cxxcode import cxxcode
 import re
 
 
 Ix, Iy, Iz = symbols('Ix Iy Iz')
-m = symbols('m')
+m = Symbol('m')
 zG = symbols('zG')
 Xu, Xuu, Yv, Yvv, Zw, Zww, Kp, Kpp, Mq, Mqq, Nr, Nrr = symbols('Xu Xuu Yv Yvv Zw Zww Kp Kpp Mq Mqq Nr Nrr')
 Xudot, Yvdot, Zwdot, Kpdot, Mqdot, Nrdot = symbols('Xudot Yvdot Zwdot Kpdot Mqdot Nrdot')
@@ -29,7 +29,7 @@ file_name = "generated_expression.txt"
 f = open(file_name, 'w+') 
 
 # fit_param = [12.99468116,  4.0926301 , -1.94335654]
-fit_param = [84.12378744,  5.156297  , 39.84008738]
+fit_param = [80,  4  , 40]
 prop_matrix = Matrix(
                 [[0.7071067811847431, 0.7071067811847433, -0.7071067811919605, -0.7071067811919607, 0.0, 0.0],
                 [-0.7071067811883519, 0.7071067811883519, -0.7071067811811347, 0.7071067811811349, 0.0, 0.0],
@@ -73,7 +73,7 @@ for term in prop_matrix * force:
     i += 1
 
 
-nu = Matrix([x, y, z, phi, theta, psi])
+nu = Matrix([u, v, w, p, q, r])
 f1, f2, f3, f4, f5, f6 = symbols('f1 f2 f3 f4 f5 f6')
 tau = Matrix([f1, f2, f3, f4, f5, f6])
 
@@ -131,25 +131,24 @@ Dnl = diag(Xuu * abs(u), Yvv * abs(v), Zww * abs(w),
 
 
 geta = Matrix([ (W - B) * sth,
-        -(W - B) * cth * sphi,
-        -(W - B) * cth * cphi,
-        zG * W * cth * sphi,
-        zG * W * sth,
-        0])
+               -(W - B) * cth * sphi,
+               -(W - B) * cth * cphi,
+                zG * W * cth * sphi,
+                zG * W * sth,
+                0])
 
 
 nudot = (inM * (tau - (Crb + Ca)* nu  - (Dnu + Dnl) * nu - geta))
 
+# J = Matrix([[cpsi * cth, - spsi * cphi + cpsi * sth * sphi, spsi * sphi + cpsi * cphi * sth, 0, 0, 0],
+#             [spsi * cth, cpsi * cphi + sphi * sth * spsi, - cpsi * sphi + sth * spsi * cphi, 0, 0, 0],
+#             [-sth, cth * sphi, cth * cphi, 0, 0, 0],
+#             [0, 0, 0, 1, sphi * sth / cth, cphi * sth / cth],
+#             [0, 0, 0, 0, cphi, -sphi],
+#             [0, 0, 0, 0, sphi / cth, cphi / cth]])
 
-J = Matrix([[cpsi * cth, - spsi * cphi + cpsi * sth * sphi, spsi * sphi + cpsi * cphi * sth, 0, 0, 0],
-            [spsi * cth, cpsi * cphi + sphi * sth * spsi, - cpsi * sphi + sth * spsi * cphi, 0, 0, 0],
-            [-sth, cth * sphi, cth * cphi, 0, 0, 0],
-            [0, 0, 0, 1, sphi * sth / cth, cphi * sth / cth],
-            [0, 0, 0, 0, cphi, -sphi],
-            [0, 0, 0, 0, sphi / cth, cphi / cth]])
 
-
-etadot = simplify(J * nu)
+# etadot = simplify(J * nu)
 
 cpsi, spsi, cphi, sphi, cth, sth= symbols('cpsi spsi cphi sphi cth sth')
 
@@ -172,29 +171,44 @@ J = Matrix([[cpsi * cth, - spsi * cphi + cpsi * sth * sphi, spsi * sphi + cpsi *
             [0, 0, 0, 0, cphi, -sphi],
             [0, 0, 0, 0, sphi / cth, cphi / cth]])
 
-
 etadot = simplify(J * nu)
 
-# nudot = simplify(nudot)
+# def exp_eval(func, state):
+#     rov_param = {Ix: 0.16, Iy:0.16, Iz:0.16, m:11.5, zG:0.08, Xudot:5.5, Yvdot:12.7, 
+#     Zwdot:14.57, Kpdot:0.12, Mqdot:0.12,Nrdot:0.12, Xu:4.03, Xuu:18.18,  
+#     Yv:6.22, Yvv:21.66, Zw:5.18, Zww:36.99, Kp:0.07, Kpp:1.55, Mq:0.07,
+#     Mqq:1.55, Nr:0.07, Nrr:1.55, W:112.8, B:114.8}
 
+#     rov_param[x] = state[0]
+#     rov_param[x] = state[1]
+#     rov_param[x] = state[2]
+#     rov_param[x] = state[3]
+#     rov_param[x] = state[4]
+#     rov_param[x] = state[5]
+#     rov_param[x] = state[6]
+
+#     func.evalf(subs=rov_param)
+# # print((nudot).evalf(subs={m:10, zG:0.8}))
+nudot = simplify(nudot)
 
 
 f.write('\n')
 f.write('Expression in C++11 flavour:\n')
 
 f.write('\n')
-f.write('Position derivatives: \n')
+f.write('Velocity derivatives: \n')
 
 i = 0
-for term in etadot:
-    f.write('derivative({}) = '.format(i) + cxxcode(term) + ';' + '\n')
+for term in nudot:
+    f.write('derivative.push_back( ' + cxxcode(term) + ');' + '\n')
     i += 1 
 
 f.write('\n')
-f.write('Velocity derivatives: \n')
+f.write('Position derivatives: \n')
 
-for term in nudot:
-    f.write('derivative({}) = '.format(i) + cxxcode(term) + ';' + '\n')
+
+for term in etadot:
+    f.write('derivative.push_back(' + cxxcode(term) + ');' + '\n')
     i += 1 
 
 f.write('\n')
@@ -235,17 +249,18 @@ f.write('\n')
 f.write('Expression in C++11 flavour for Control Toolbox:\n')
 
 f.write('\n')
-f.write('Position derivatives: \n')
+f.write('Velocity derivatives: \n')
 
 i = 0
-for term in etadot:
-    f.write('derivative({}) = '.format(i) + ct_subs(str(term)) + ';' +  '\n')
+for term in nudot:
+    f.write('derivative({}) = '.format(i) + ct_subs(str(term)) + ';' + '\n')
     i += 1 
 
 f.write('\n')
-f.write('Velocity derivatives: \n')
+f.write('Position derivatives: \n')
 
-for term in nudot:
+
+for term in etadot:
     f.write('derivative({}) = '.format(i) + ct_subs(str(term)) + ';' + '\n')
     i += 1 
 
