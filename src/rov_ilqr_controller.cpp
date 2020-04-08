@@ -1,6 +1,7 @@
 #include <ct/optcon/optcon.h>
 #include "ROVdynamic.h"
 #include "configDir.h"
+#include "plotResult.h"
 
 #include <ros/ros.h>
 #include <geometry_msgs/Wrench.h>
@@ -106,8 +107,8 @@ class ILQRController {
             finalCost->updateReferenceState(this->x_ref);
 
 
-            std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> costFunction(
-                new CostFunctionAnalytical<state_dim, control_dim>());
+            std::shared_ptr<CostFunctionQuadraticSimple<state_dim, control_dim>> costFunction(
+                new CostFunctionQuadraticSimple<state_dim, control_dim>());
             costFunction->addIntermediateTerm(intermediateCost);
             costFunction->addFinalTerm(finalCost);
 
@@ -126,11 +127,15 @@ class ILQRController {
             ControlVectorArray<control_dim> u0_ff(N, ControlVector<control_dim>::Random());
             StateVectorArray<state_dim> x_ref_init(N + 1, x_ref);
             NLOptConSolver<state_dim, control_dim>::Policy_t initController(x_ref_init, u0_ff, u0_fb, nloc_settings.dt);
+            auto t_array = TimeArray(N, timeHorizon);
+            //plotResultsROV<state_dim, control_dim>(x_ref_init, u0_fb, u0_ff, t_array);
+
 
             NLOPPtr_t iLQR(new NLOptConSolver<state_dim, control_dim>(optConProblem, nloc_settings));
             this->nlop_problem = iLQR;
             this->nlop_problem->setInitialGuess(initController);
             this->nlop_problem->solve();
+        
 
         }
 
@@ -207,7 +212,19 @@ class ILQRController {
             ILQRController::odom_message_converter(msg, this->x_now);
         }
 
+        void plot_solution(){
+            const size_t state_dim = rov::ROV::STATE_DIM;
+            const size_t control_dim = rov::ROV::CONTROL_DIM;
 
+            ct::core::StateFeedbackController<state_dim, control_dim> solution = this->nlop_problem->getSolution();
+
+            plotResultsROV<state_dim, control_dim>(solution.x_ref(),
+                                                   solution.K(),
+                                                   solution.uff(), 
+                                                   solution.time());
+
+            
+        }
 
         void pose_ref_callback(const geometry_msgs::PoseStamped::ConstPtr & msg){
             
@@ -219,6 +236,7 @@ class ILQRController {
                 ILQRController::create_dynamics();
                 ILQRController::update_ilqr_controller(this->x_now, this->x_ref);
                 x_ref_current = this->x_ref;
+                ILQRController::plot_solution();
                 controller_not_created_ = false;
                 start_time = ros::Time::now().toSec();
 
