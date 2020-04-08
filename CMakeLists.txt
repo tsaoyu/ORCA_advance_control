@@ -2,6 +2,13 @@ cmake_minimum_required(VERSION 2.8.3)
 project(orca_advance_control)
 
 ## Compile as C++11, supported in ROS Kinetic and newer
+set(CMAKE_BUILD_TYPE Debug)
+# set(CLANG_C_COMPILER "/usr/bin/clang" CACHE STRING "Path to Clang C compiler binary")
+# set(CLANG_CXX_COMPILER "/usr/bin/clang++" CACHE STRING "Path to Clang C++ compiler binary")
+# SET (CMAKE_C_COMPILER             ${CLANG_C_COMPILER})
+# SET (CMAKE_CXX_COMPILER           ${CLANG_CXX_COMPILER})
+# SET(CMAKE_BUILD_TYPE Release)
+
 add_compile_options(-pthread -std=c++14 -Wall -Wfatal-errors)
 
 ## Find catkin macros and libraries
@@ -141,11 +148,12 @@ include_directories(
 ## Declare a C++ executable
 ## With catkin_make all packages are built within a single CMake context
 ## The recommended prefix ensures that target names across packages don't collide
-add_executable(rov_node src/ROV_main.cpp)
-add_executable(rov_ad_test src/LQR_controller.cpp)
-add_executable(rov_iLQR src/iLQR_controller.cpp)
-add_executable(rov_MPC src/MPC_controller.cpp)
-add_executable(rov_MPC_node src/mpc_controller_node.cpp)
+add_executable(rov_dynamics_node src/rov_dynamics_node.cpp)
+add_executable(rov_lqr_controller_node src/rov_lqr_controller.cpp)
+add_executable(rov_ilqr_controller_node src/rov_ilqr_controller.cpp)
+add_executable(rov_mpc_controller_node src/rov_mpc_controller.cpp)
+add_executable(rov_lqr_test_node src/LQR_controller.cpp)
+
 
 ## Rename C++ executable without prefix
 ## The above recommended prefix causes long target names, the following renames the
@@ -159,27 +167,28 @@ add_executable(rov_MPC_node src/mpc_controller_node.cpp)
 
 ## Specify libraries to link a library or executable target against
 
-target_link_libraries(rov_node
+target_link_libraries(rov_dynamics_node
+  ${catkin_LIBRARIES} ct_optcon 
+)
+
+target_link_libraries(rov_lqr_controller_node
+  ${catkin_LIBRARIES} ct_optcon 
+)
+
+target_link_libraries(rov_ilqr_controller_node
+  ${catkin_LIBRARIES} ct_optcon 
+)
+
+target_link_libraries(rov_mpc_controller_node
   ${catkin_LIBRARIES} ct_optcon 
 )
 
 
-target_link_libraries(rov_ad_test
+target_link_libraries(rov_lqr_test_node
   ${catkin_LIBRARIES} ct_optcon 
 )
 
 
-target_link_libraries(rov_iLQR
-  ${catkin_LIBRARIES} ct_optcon 
-)
-
-target_link_libraries(rov_MPC
-  ${catkin_LIBRARIES} ct_optcon 
-)
-
-target_link_libraries(rov_MPC_node
-  ${catkin_LIBRARIES} ct_optcon 
-)
 
 
 #############
