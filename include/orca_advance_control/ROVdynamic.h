@@ -41,9 +41,9 @@ public:
         SCALAR q = s(4);
         SCALAR r = s(5); 
 
-        SCALAR x = s(6);
-        SCALAR y = s(7);
-        SCALAR z = s(8);
+        // SCALAR x = s(6);
+        // SCALAR y = s(7);
+        // SCALAR z = s(8);
 
         SCALAR phi = s(9);
         SCALAR theta = s(10);
@@ -52,15 +52,15 @@ public:
         
 
         // Thruster model 
-        // normalised control command between -1 and 1
+        // normalised control command between -100 and 100
         // Forward (X), Lateral(Y), Throttle(Z) and Yaw(yaw)
         // see https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors6DOF.cpp
 
 
-        SCALAR X = a(0);
-        SCALAR Y = a(1);
-        SCALAR Z = a(2);
-        SCALAR yaw = a(3);
+        SCALAR X = a(0)/100;
+        SCALAR Y = a(1)/100;
+        SCALAR Z = a(2)/100;
+        SCALAR yaw = a(3)/100;
 
 
         SCALAR cpsi = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi);
@@ -117,15 +117,8 @@ public:
         // std::cout << "Force/Moment: " << std::setw(8) << f1 << " " << f2 << " " << f3 << " " << f4 << " " << f5 << " " << f6 << "\n";
 
 
-
     }
 
-    void updateManualControl(const ct::core::ControlVector<CONTROL_DIM, SCALAR>& control) override
-    {
-       ROV::manualcontrolAction_ = control;
-       ROV::isManual_ = true;
-
-    }
 
 private:
     
