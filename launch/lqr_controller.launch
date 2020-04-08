@@ -10,9 +10,10 @@
     <!-- <node machine="rov" pkg="redrov_missions" name="mavproxy" type="mavproxy.sh"/> -->
 
     <!-- <node pkg="redrov_control" name="joy_manual_control_node" type="joy_manual_control_node" output="screen"/> -->
-    <node pkg="orca_advance_control" name="joy_simulation_node" type="joy_simulation_node" output="screen"/>
-    <!-- <node pkg="redrov_control" name="rov_simulation_node" type="rov_simulation_node" output="screen"/> -->
+    <!-- <node pkg="redrov_simulation" name="rov_simulation_node" type="rov_simulation_node" output="screen"/> -->
+
     <node pkg="orca_advance_control" name="rov_dynamics_node" type="rov_dynamics_node" output="screen"/>
+    <node pkg="orca_advance_control" name="rov_lqr_controller_node" type="rov_lqr_controller_node" output="screen"/>
     <node pkg="redrov_control" name="static_tf_publisher" type="static_tf_trans_publisher_node"/>
   
     <include file="$(find redrov_simulation)/launch/upload_bluerov2.launch" />

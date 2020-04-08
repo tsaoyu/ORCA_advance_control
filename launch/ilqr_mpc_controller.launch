@@ -1,0 +1,12 @@
+<launch>
+
+    <node pkg="redrov_simulation" name="redrov_simulation_node" type="rov_simulation_node" output="screen"/>
+    
+    <rosparam file="$(find redrov_control)/config/pid_controller/pid_controller_master.yaml" />
+    <node name="body_position_error_transformer_node" pkg="redrov_control" type="body_position_error_transformer_node" output="screen"/>
+    <node name="rov_ilqr_mpc_controller" pkg="orca_advance_control" type="rov_MPC_node" output="screen"/>
+
+    <node pkg="redrov_control" name="static_tf_publisher" type="static_tf_trans_publisher_node"/>
+    <include file="$(find redrov_simulation)/launch/upload_bluerov2.launch" />
+    <include file="$(find redrov_missions)/launch/visulisation.launch"/>
+</launch>
