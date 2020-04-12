@@ -16,8 +16,8 @@ ilqr
     maxDefectSum 1e-5
     meritFunctionRho 0.0
     meritFunctionRhoConstraints 0.0
-    nThreads 1
-    nThreadsEigen 1
+    nThreads 8
+    nThreadsEigen 8
     locp_solver HPIPM_SOLVER
     printSummary true
     debugPrint true 
