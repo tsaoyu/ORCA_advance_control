@@ -20,6 +20,7 @@ class ILQRController {
         typedef std::shared_ptr<rov::tpl::ROV<ct::core::ADCGScalar>> SystemPtr_t;
         typedef std::shared_ptr<ct::core::ADCodegenLinearizer<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> LinearSystemPtr_t;
         typedef std::shared_ptr<NLOptConSolver<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> NLOPPtr_t;
+        
 
 
         ILQRController(ros::NodeHandle *n){
@@ -96,41 +97,62 @@ class ILQRController {
             const size_t state_dim = rov::ROV::STATE_DIM;
             const size_t control_dim = rov::ROV::CONTROL_DIM;
 
-            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
-                new ct::optcon::TermQuadratic<state_dim, control_dim>());
-            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> finalCost(
-                new ct::optcon::TermQuadratic<state_dim, control_dim>());
+            // std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
+            //     new ct::optcon::TermQuadratic<state_dim, control_dim>());
+            // std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> finalCost(
+            //     new ct::optcon::TermQuadratic<state_dim, control_dim>());
 
-            intermediateCost->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
-            finalCost->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
-            intermediateCost->updateReferenceState(this->x_ref);
-            finalCost->updateReferenceState(this->x_ref);
+            // intermediateCost->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
+            // finalCost->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
+            // intermediateCost->updateReferenceState(this->x_ref);
+            // finalCost->updateReferenceState(this->x_ref);
+            
+            std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_interm(
+                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
+            std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_final(
+                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
 
+            termQuadraticAD_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
+            termQuadraticAD_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
+            // termQuadraticAD_interm->updateReferenceState(this->x_ref);
+            termQuadraticAD_final->updateReferenceState(this->x_ref);
 
-            std::shared_ptr<CostFunctionQuadraticSimple<state_dim, control_dim>> costFunction(
-                new CostFunctionQuadraticSimple<state_dim, control_dim>());
-            costFunction->addIntermediateTerm(intermediateCost);
-            costFunction->addFinalTerm(finalCost);
+            std::shared_ptr<CostFunctionAD<state_dim, control_dim>> costFunctionAD (
+                new CostFunctionAD<state_dim, control_dim>());
+
+            // std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> costFunction(
+            //     new CostFunctionQuadraticSimple<state_dim, control_dim>());
+            costFunctionAD->addIntermediateADTerm(termQuadraticAD_interm);
+            costFunctionAD->addFinalADTerm(termQuadraticAD_final);
+            
+            costFunctionAD->initialize();
 
 
             // Step 3: setup iLQR controller
 
-            ct::core::Time timeHorizon = 3.0;
+            ct::core::Time timeHorizon = 5.0;
             ContinuousOptConProblem<state_dim, control_dim> optConProblem(
-                timeHorizon, x_init, this->rovdynamics, costFunction, this->Linearizer);
+                timeHorizon, x_init, this->rovdynamics, costFunctionAD, this->Linearizer);
+
+            std::cout << x_init << std::endl;
 
             NLOptConSettings nloc_settings;
             nloc_settings.load(configDir + "/ilqr_nloc.info", true, "ilqr");
 
             size_t N = nloc_settings.computeK(timeHorizon);
             FeedbackArray<state_dim, control_dim> u0_fb(N, FeedbackMatrix<state_dim, control_dim>::Zero());
-            ControlVectorArray<control_dim> u0_ff(N, ControlVector<control_dim>::Random());
-            StateVectorArray<state_dim> x_ref_init(N + 1, x_ref);
+            ControlVector<control_dim> u0;
+            u0(0)=20;
+            u0(1)=20;
+            u0(2)=20;
+            u0(3)=20;
+            ControlVectorArray<control_dim> u0_ff(N, u0);
+            StateVectorArray<state_dim> x_ref_init(N + 1, x_init);
             NLOptConSolver<state_dim, control_dim>::Policy_t initController(x_ref_init, u0_ff, u0_fb, nloc_settings.dt);
             auto t_array = TimeArray(N, timeHorizon);
-            //plotResultsROV<state_dim, control_dim>(x_ref_init, u0_fb, u0_ff, t_array);
+            // plotResultsROV<state_dim, control_dim>(x_ref_init, u0_fb, u0_ff, t_array);
 
-
+        
             NLOPPtr_t iLQR(new NLOptConSolver<state_dim, control_dim>(optConProblem, nloc_settings));
             this->nlop_problem = iLQR;
             this->nlop_problem->setInitialGuess(initController);
