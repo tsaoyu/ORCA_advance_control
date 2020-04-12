@@ -1,11 +1,5 @@
 <launch>
 
-
-    <node pkg="joy" name="joy" type="joy_node">
-        <param name="coalesce_interval" value="0.002"/>
-        <param name="autorepeat_rate" value="50"/>
-    </node>
-
     <!-- Default mavlink proxy option is mavlink router, switch to mavproxy by uncommet the following -->
     <!-- <node machine="rov" pkg="redrov_missions" name="mavproxy" type="mavproxy.sh"/> -->
 
