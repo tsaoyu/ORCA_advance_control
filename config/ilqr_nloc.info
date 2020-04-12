@@ -1,6 +1,6 @@
 ilqr
 {
-    nlocp_algorithm GNMS
+    nlocp_algorithm ILQR
     integrator RK4
     useSensitivityIntegrator false
     discretization Forward_euler
@@ -19,23 +19,23 @@ ilqr
     nThreads 1
     nThreadsEigen 1
     locp_solver HPIPM_SOLVER
-    printSummary false
-    debugPrint false 
+    printSummary true
+    debugPrint true 
     logToMatlab 0   
     
     line_search
     {
-        type NONE
+        type ARMIJO
         adaptive false
-        maxIterations 150
+        maxIterations 100
         alpha_0 1.0
         n_alpha 0.5
-        debugPrint false
+        debugPrint true
     }
 
     lqoc_solver_settings
     {
-        lqoc_debug_print        false
+        lqoc_debug_print        true
         num_lqoc_iterations  	100
     }
 }
