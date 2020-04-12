@@ -7,7 +7,7 @@ ilqr
     timeVaryingDiscretization true
     dt 0.02
     K_sim 1
-    K_shot 1
+    K_shot 10
     epsilon 0
     max_iterations 100
     fixedHessianCorrection false
