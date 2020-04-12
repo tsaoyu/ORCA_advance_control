@@ -25,9 +25,9 @@ ilqr
     
     line_search
     {
-        type NONE
+        type ARMIJO
         adaptive false
-        maxIterations 100
+        maxIterations 12
         alpha_0 1.0
         n_alpha 0.5
         debugPrint true
