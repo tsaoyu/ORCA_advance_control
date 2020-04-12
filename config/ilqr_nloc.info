@@ -6,8 +6,8 @@ ilqr
     discretization Forward_euler
     timeVaryingDiscretization true
     dt 0.02
-    K_sim 1
-    K_shot 10
+    K_sim 10
+    K_shot 1
     epsilon 0
     max_iterations 100
     fixedHessianCorrection false
