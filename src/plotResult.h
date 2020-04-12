@@ -75,7 +75,8 @@ template <size_t STATE_DIM, size_t CONTROL_DIM>
 void plotResultsROV(const ct::core::StateVectorArray<STATE_DIM>& stateArray,
     const ct::core::FeedbackArray<STATE_DIM, CONTROL_DIM>& fbcontrolArray,
     const ct::core::ControlVectorArray<CONTROL_DIM>& ffcontrolArray,
-    const ct::core::TimeArray& timeArray)
+    const ct::core::TimeArray& timeArray,
+    bool save_matrix_to_file = false)
 {
 
     using namespace ct::core;
@@ -196,9 +197,9 @@ void plotResultsROV(const ct::core::StateVectorArray<STATE_DIM>& stateArray,
             // feedforward_psi.push_back(ffcontrolArray[j](11));
 
             feedforward_X.push_back(ffcontrolArray[j](0));
-            feedforward_Y.push_back(ffcontrolArray[j](0));
-            feedforward_Z.push_back(ffcontrolArray[j](0));
-            feedforward_YAW.push_back(ffcontrolArray[j](0));
+            feedforward_Y.push_back(ffcontrolArray[j](1));
+            feedforward_Z.push_back(ffcontrolArray[j](2));
+            feedforward_YAW.push_back(ffcontrolArray[j](3));
 
             time_control.push_back(timeArray[j]);
         }
@@ -212,7 +213,7 @@ void plotResultsROV(const ct::core::StateVectorArray<STATE_DIM>& stateArray,
         plot::title("y");
         
         plot::subplot(3, 4, 3);
-        plot::plot(time_state, state_y);
+        plot::plot(time_state, state_z);
         plot::title("z");
 
         plot::subplot(3, 4, 4);
@@ -252,10 +253,12 @@ void plotResultsROV(const ct::core::StateVectorArray<STATE_DIM>& stateArray,
         plot::subplot(3, 4, 12);
         plot::plot(time_control, feedforward_YAW);
         plot::title("psi");
-
-
+        
+        
 
         plot::show();
+        if (save_matrix_to_file)
+            return;
     } catch (const std::exception& e)
     {
         std::cout << e.what() << std::endl;
