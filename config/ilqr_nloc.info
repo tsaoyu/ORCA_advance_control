@@ -4,7 +4,7 @@ ilqr
     integrator RK4
     useSensitivityIntegrator false
     discretization Forward_euler
-    timeVaryingDiscretization true
+    timeVaryingDiscretization false
     dt 0.02
     K_sim 10
     K_shot 1
