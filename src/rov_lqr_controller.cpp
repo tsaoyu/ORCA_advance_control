@@ -87,11 +87,13 @@ class LQRController {
             adLinearizer->compileJIT();
 
 
-            // Step 3: setup LQR controller
-
+            // Step 3: setup LQR controller 
 
             double t = 0;
-            u.setOnes();
+            u(0) = 50;
+            u(1) = 50;
+            u(2) = 50;
+            u(3) = 50; // Linearise around operation point
 
             auto A = adLinearizer->getDerivativeState(x_init, u, t);
             auto B = adLinearizer->getDerivativeControl(x_init, u, t);
@@ -243,13 +245,13 @@ class LQRController {
             // ct::optcon::LQR<state_dim, control_dim> lqrSolver;
             // lqrSolver.compute(Q, R, A, B, K);
             // std::cout << "LQR gain matrix (controller):" << std::endl << K << std::endl;
-            ct::core::StateVector<rov::ROV::STATE_DIM> x_error = this->x_ref - this->x_now;
-            x_error(0) = 0;
-            x_error(1) = 0;
-            x_error(2) = 0;
-            x_error(3) = 0;
-            x_error(4) = 0;
-            x_error(5) = 0;
+            // ct::core::StateVector<rov::ROV::STATE_DIM> x_error = this->x_ref - this->x_now;
+            // x_error(0) = 0;
+            // x_error(1) = 0;
+            // x_error(2) = 0;
+            // x_error(3) = 0;
+            // x_error(4) = 0;
+            // x_error(5) = 0;
 
         
             u = K * (this->x_ref - this->x_now);
