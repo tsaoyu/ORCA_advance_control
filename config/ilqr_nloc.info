@@ -1,6 +1,6 @@
 ilqr
 {
-    nlocp_algorithm MS_ILQR
+    nlocp_algorithm GNMS_M_OL
     integrator RK4
     useSensitivityIntegrator false
     discretization Forward_euler
