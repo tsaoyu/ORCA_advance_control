@@ -97,28 +97,33 @@ class LQRController {
             const size_t state_dim = rov::ROV::STATE_DIM;
             const size_t control_dim = rov::ROV::CONTROL_DIM;
 
-            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
-                new ct::optcon::TermQuadratic<state_dim, control_dim>());
-            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> finalCost(
-                new ct::optcon::TermQuadratic<state_dim, control_dim>());
+            std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_interm(
+                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
+            std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_final(
+                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
 
-            intermediateCost->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
-            finalCost->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
-            intermediateCost->updateReferenceState(this->x_ref);
-            finalCost->updateReferenceState(this->x_ref);
+            termQuadraticAD_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
+            termQuadraticAD_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
+            termQuadraticAD_interm->updateReferenceState(this->x_ref);
+            termQuadraticAD_final->updateReferenceState(this->x_ref);
 
+            std::shared_ptr<CostFunctionAD<state_dim, control_dim>> costFunctionAD (
+                new CostFunctionAD<state_dim, control_dim>());
 
-            std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> costFunction(
-                new CostFunctionAnalytical<state_dim, control_dim>());
-            costFunction->addIntermediateTerm(intermediateCost);
-            costFunction->addFinalTerm(finalCost);
+            // std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> costFunction(
+            //     new CostFunctionQuadraticSimple<state_dim, control_dim>());
+            costFunctionAD->addIntermediateADTerm(termQuadraticAD_interm);
+            costFunctionAD->addFinalADTerm(termQuadraticAD_final);
+            
+            costFunctionAD->initialize();
+
 
 
             // Step 3: setup MPC controller
 
             ct::core::Time timeHorizon = 3.0;
             ContinuousOptConProblem<state_dim, control_dim> optConProblem(
-                timeHorizon, x_init, this->rovdynamics, costFunction, this->Linearizer);
+                timeHorizon, x_init, this->rovdynamics, costFunctionAD, this->Linearizer);
 
             NLOptConSettings nloc_settings;
             nloc_settings.load(configDir + "/ilqr_nloc.info", true, "ilqr");
@@ -126,7 +131,7 @@ class LQRController {
             size_t N = nloc_settings.computeK(timeHorizon);
             FeedbackArray<state_dim, control_dim> u0_fb(N, FeedbackMatrix<state_dim, control_dim>::Ones());
             ControlVectorArray<control_dim> u0_ff(N, ControlVector<control_dim>::Zero());
-            StateVectorArray<state_dim> x_ref_init(N + 1, x_ref);
+            StateVectorArray<state_dim> x_ref_init(N + 1, x_init);
             NLOptConSolver<state_dim, control_dim>::Policy_t initController(x_ref_init, u0_ff, u0_fb, nloc_settings.dt);
 
             NLOPPtr_t iLQR(new NLOptConSolver<state_dim, control_dim>(optConProblem, nloc_settings));
