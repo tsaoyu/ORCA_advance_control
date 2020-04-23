@@ -57,10 +57,10 @@ public:
         // see https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors6DOF.cpp
 
 
-        SCALAR X = a(0)/100;
-        SCALAR Y = a(1)/100;
-        SCALAR Z = a(2)/100;
-        SCALAR yaw = a(3)/100;
+        SCALAR X = (a(0) - 0.01)/100;
+        SCALAR Y = (a(1) - 0.01)/100;
+        SCALAR Z = (a(2) - 0.1)/100;
+        SCALAR yaw = (a(3) - 0.01)/100;
 
 
         SCALAR cpsi = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi);
@@ -105,18 +105,6 @@ public:
         derivative(10) = cphi*q - r*sphi;
         derivative(11) = (cphi*r + q*sphi)/cth;
         
-        // std::cout << std::showpos;
-        // std::cout << std::showpoint;
-        // std::cout << std::scientific;
-        // std::cout << std::setprecision(4);
-
-        // std::cout << "Commands:     " << std::setw(8) << X << " " << Y << " " << Z << " " << yaw << "\n";
-        // std::cout << "Derivatives:  " << std::setw(8) << derivative(0) << " " << derivative(1) << " " << derivative(2) << " " << derivative(3) << " " << derivative(4) << " " << derivative(5) << " " << derivative(6) << " " << derivative(7) << " " << derivative(8) << " " << derivative(9) << " " << derivative(10) << " " << derivative(11) << " " << "\n";
-        // std::cout << "States:       " << std::setw(8) << s(0) << " " << s(1) << " " << s(2) << " " << s(3) << " " << s(4) << " " << s(5) << " " << s(6) << " " << s(7) << " " << s(8) << " " << s(9) << " " << s(10) << " " << s(11) << " " << "\n";
-        // std::cout << "Thrusts:      " << std::setw(8) << t1 << " " << t2 << " " << t3 << " " << t4 << " " << t5 << " " << t6 << "\n";
-        // std::cout << "Force/Moment: " << std::setw(8) << f1 << " " << f2 << " " << f3 << " " << f4 << " " << f5 << " " << f6 << "\n";
-
-
     }
 
 
