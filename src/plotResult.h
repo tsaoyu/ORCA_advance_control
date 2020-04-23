@@ -2,7 +2,8 @@
 This file is part of the Control Toolbox (https://github.com/ethz-adrl/control-toolbox), copyright by ETH Zurich.
 Licensed under the BSD-2 license (see LICENSE file in main directory)
 **********************************************************************************************************************/
-
+#include <fstream>  
+#include <string>
 
 template <size_t STATE_DIM, size_t CONTROL_DIM>
 void plotResultsOscillator(const ct::core::StateVectorArray<STATE_DIM>& stateArray,
@@ -266,3 +267,107 @@ void plotResultsROV(const ct::core::StateVectorArray<STATE_DIM>& stateArray,
 
 }
 
+void write_csv(std::ofstream & file, std::vector<double> vals, std::string name){
+    // Make a CSV file with one column of integer values
+    // filename - the name of the file
+    // colname - the name of the one and only column
+    // vals - an integer vector of values
+    
+    // Send data to the stream
+    file << name << ",";
+
+    for(int i = 0; i < vals.size() - 1; ++i)
+    {
+        file << vals.at(i) << ",";
+    }
+    file << vals.back() << "\n";
+
+}
+
+
+template <size_t STATE_DIM, size_t CONTROL_DIM>
+void saveResultROV(const ct::core::StateVectorArray<STATE_DIM>& stateArray,
+    const ct::core::FeedbackArray<STATE_DIM, CONTROL_DIM>& fbcontrolArray,
+    const ct::core::ControlVectorArray<CONTROL_DIM>& ffcontrolArray,
+    const ct::core::TimeArray& timeArray)
+{
+
+    using namespace ct::core;
+
+ 
+    std::vector<double> state_x;
+    std::vector<double> state_y;
+    std::vector<double> state_z;
+    std::vector<double> state_phi;
+    std::vector<double> state_theta;
+    std::vector<double> state_psi;
+
+
+    std::vector<double> state_u;
+    std::vector<double> state_v;
+    std::vector<double> state_w;
+    std::vector<double> state_p;
+    std::vector<double> state_q;
+    std::vector<double> state_r;
+
+    std::vector<double> time_state;
+
+    for (size_t j = 0; j < stateArray.size(); j++)
+
+    {
+
+        state_u.push_back(stateArray[j](0));
+        state_v.push_back(stateArray[j](1));
+        state_w.push_back(stateArray[j](2));
+        state_p.push_back(stateArray[j](3));
+        state_q.push_back(stateArray[j](4));
+        state_r.push_back(stateArray[j](5));
+
+
+        state_x.push_back(stateArray[j](6));
+        state_y.push_back(stateArray[j](7));
+        state_z.push_back(stateArray[j](8));
+        state_phi.push_back(stateArray[j](9));
+        state_theta.push_back(stateArray[j](10));
+        state_psi.push_back(stateArray[j](11));
+
+        time_state.push_back(timeArray[j]);
+    }   
+
+    std::vector<double> feedforward_X;
+    std::vector<double> feedforward_Y;
+    std::vector<double> feedforward_Z;
+    std::vector<double> feedforward_YAW;
+
+    std::vector<double> time_control;
+    for (size_t j = 0; j < ffcontrolArray.size(); j++)
+    {
+        feedforward_X.push_back(ffcontrolArray[j](0));
+        feedforward_Y.push_back(ffcontrolArray[j](1));
+        feedforward_Z.push_back(ffcontrolArray[j](2));
+        feedforward_YAW.push_back(ffcontrolArray[j](3));
+
+        time_control.push_back(timeArray[j]);
+    }
+
+    std::ofstream myfile("/home/yu/Playground/result.csv", std::ofstream::app);
+    write_csv(myfile, time_control, "time");
+    write_csv(myfile, state_u, "u");
+    write_csv(myfile, state_v, "v");
+    write_csv(myfile, state_w, "w");
+    write_csv(myfile, state_r, "r");
+
+    write_csv(myfile, state_x, "x");
+    write_csv(myfile, state_y, "y");
+    write_csv(myfile, state_z, "z");
+    write_csv(myfile, state_psi, "psi");
+
+    write_csv(myfile, feedforward_X, "X");
+    write_csv(myfile, feedforward_Y, "Y");
+    write_csv(myfile, feedforward_Z, "Z");
+    write_csv(myfile, feedforward_YAW, "YAW");
+    
+
+    myfile.close();
+   
+}
