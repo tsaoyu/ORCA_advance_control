@@ -1,6 +1,8 @@
 #include <ct/optcon/optcon.h>
 #include "ROVdynamic.h"
 #include "configDir.h"
+#include "plotResult.h"
+
 
 #include <ros/ros.h>
 #include <geometry_msgs/Wrench.h>
@@ -12,7 +14,7 @@ using namespace ct::core;
 using namespace ct::optcon;
 
 
-class LQRController {
+class MPCController {
 
     public:
         typedef std::shared_ptr<ct::core::StateFeedbackController<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> ControllerPtr_t;
@@ -22,11 +24,15 @@ class LQRController {
         typedef std::shared_ptr<MPC<NLOptConSolver<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>>> MPCPtr_t;
         typedef ct::core::StateFeedbackController<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM> PolicyPtr_t;
         typedef std::shared_ptr<CostFunctionQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> CostFuncPtr_t;
+        typedef std::shared_ptr<CostFunctionAD<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> CostFuncADPtr_t;
+        // typedef std::shared_ptr<TermQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM, double, ct::core::ADCGScalar>> TermPtr_t;
+        typedef std::shared_ptr<ct::optcon::TermQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> TermPtr_t;
 
-        LQRController(ros::NodeHandle *n){
-            pose_ref_sub = n->subscribe("/pose_ref",10, &LQRController::pose_ref_callback, this);
+
+        MPCController(ros::NodeHandle *n){
+            pose_ref_sub = n->subscribe("/pose_ref",10, &MPCController::pose_ref_callback, this);
             cmd_wrench_pub = n->advertise<geometry_msgs::Wrench>("/cmd_wrench", 10);
-            odom_sub = n->subscribe("/BodyROV01/odom", 10, &LQRController::odom_callback, this);
+            odom_sub = n->subscribe("/BodyROV01/odom", 10, &MPCController::odom_callback, this);
         }
 
 
@@ -86,81 +92,146 @@ class LQRController {
             ct::core::ADCodegenLinearizer<state_dim, control_dim>(rovdynamicAD));
 
             this->Linearizer = adLinearizer;
-            adLinearizer->compileJIT();
+            this->Linearizer->compileJIT();
 
 
         }
 
-        void update_ilqr_controller(const ct::core::StateVector<rov::ROV::STATE_DIM>& x_init, 
+        void update_mpc_controller(const ct::core::StateVector<rov::ROV::STATE_DIM>& x_init, 
                                    const ct::core::StateVector<rov::ROV::STATE_DIM>& x_ref){
 
             const size_t state_dim = rov::ROV::STATE_DIM;
             const size_t control_dim = rov::ROV::CONTROL_DIM;
 
-            std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_interm(
-                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
-            std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_final(
-                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
+            // TermPtr_t termQuadraticAD_interm(
+            //     new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
+            // TermPtr_t termQuadraticAD_final(
+            //     new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
 
-            termQuadraticAD_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
-            termQuadraticAD_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
-            termQuadraticAD_interm->updateReferenceState(this->x_ref);
-            termQuadraticAD_final->updateReferenceState(this->x_ref);
+            // this->termQuad_interm = termQuadraticAD_interm;
+            // this->termQuad_final = termQuadraticAD_final;
 
-            std::shared_ptr<CostFunctionAD<state_dim, control_dim>> costFunctionAD (
-                new CostFunctionAD<state_dim, control_dim>());
-
-            // std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> costFunction(
-            //     new CostFunctionQuadraticSimple<state_dim, control_dim>());
-            costFunctionAD->addIntermediateADTerm(termQuadraticAD_interm);
-            costFunctionAD->addFinalADTerm(termQuadraticAD_final);
+            // this->termQuad_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
+            // this->termQuad_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
+            // this->termQuad_interm->updateReferenceState(this->x_ref);
+            // this->termQuad_final->updateReferenceState(this->x_ref);
             
-            costFunctionAD->initialize();
+            // CostFuncADPtr_t costFunctionAD (new CostFunctionAD<state_dim, control_dim>());
 
 
+            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
+                new ct::optcon::TermQuadratic<state_dim, control_dim>());
+            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> finalCost(
+                new ct::optcon::TermQuadratic<state_dim, control_dim>());
+            this->termQuad_interm = intermediateCost;
+            this->termQuad_final = finalCost;
+            this->termQuad_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
+            this->termQuad_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
+            this->termQuad_interm->updateReferenceState(this->x_ref);
+            this->termQuad_final->updateReferenceState(this->x_ref);
 
+            
+            CostFuncPtr_t costFunction(
+                new CostFunctionAnalytical<state_dim, control_dim>());
+            this->costFunc = costFunction;
+
+            this->costFunc->addIntermediateTerm(this->termQuad_interm);
+            this->costFunc->addFinalTerm(this->termQuad_final);
+
+            // this->costFun = costFunctionAD;
+
+            // // std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> costFunction(
+            // //     new CostFunctionQuadraticSimple<state_dim, control_dim>());
+            // this->costFun->addIntermediateADTerm(this->termQuad_interm);
+            // this->costFun->addFinalADTerm(this->termQuad_final);
+            
+            // this->costFun->initialize();
+
+
+            ControlVector<control_dim> ulow;
+            ControlVector<control_dim> uhigh;
+            ulow  << -100, -100,  -100,  -100;
+            uhigh <<  100,  100 ,  100,   100;
+
+            std::shared_ptr<ct::optcon::ControlInputConstraint<state_dim, control_dim>> controlInputBound(
+                new ct::optcon::ControlInputConstraint<state_dim, control_dim>(ulow, uhigh));
+            
+            std::shared_ptr<ConstraintContainerAnalytical<state_dim, control_dim>> inputBoxConstraints(
+                 new ct::optcon::ConstraintContainerAnalytical<state_dim, control_dim>());
+            
+            inputBoxConstraints->addIntermediateConstraint(controlInputBound, false);
             // Step 3: setup MPC controller
 
             ct::core::Time timeHorizon = 3.0;
             ContinuousOptConProblem<state_dim, control_dim> optConProblem(
-                timeHorizon, x_init, this->rovdynamics, costFunctionAD, this->Linearizer);
+                timeHorizon, x_init, this->rovdynamics, this->costFunc, this->Linearizer);
+            optConProblem.setInputBoxConstraints(inputBoxConstraints);
 
             NLOptConSettings nloc_settings;
             nloc_settings.load(configDir + "/ilqr_nloc.info", true, "ilqr");
 
             size_t N = nloc_settings.computeK(timeHorizon);
-            FeedbackArray<state_dim, control_dim> u0_fb(N, FeedbackMatrix<state_dim, control_dim>::Ones());
-            ControlVectorArray<control_dim> u0_ff(N, ControlVector<control_dim>::Zero());
+            FeedbackArray<state_dim, control_dim> u0_fb(N, FeedbackMatrix<state_dim, control_dim>::Zero());
+            ControlVector<control_dim> u0;
+            u0(0)=20;
+            u0(1)=20;
+            u0(2)=20;
+            u0(3)=20;
+            ControlVectorArray<control_dim> u0_ff(N, u0);
             StateVectorArray<state_dim> x_ref_init(N + 1, x_init);
             NLOptConSolver<state_dim, control_dim>::Policy_t initController(x_ref_init, u0_ff, u0_fb, nloc_settings.dt);
 
-            NLOPPtr_t iLQR(new NLOptConSolver<state_dim, control_dim>(optConProblem, nloc_settings));
-            this->nlop_problem = iLQR;
+            NLOPPtr_t NLOP(new NLOptConSolver<state_dim, control_dim>(optConProblem, nloc_settings));
+            this->nlop_problem = NLOP;
             this->nlop_problem->setInitialGuess(initController);
             this->nlop_problem->solve();
 
             ct::core::StateFeedbackController<state_dim, control_dim> solution = this->nlop_problem->getSolution();
-            NLOptConSettings ilqr_settings_mpc = nloc_settings;
-            // ... however, in MPC-mode, it makes sense to limit the overall number of iLQR iterations (real-time iteration scheme)
-            ilqr_settings_mpc.max_iterations = 1;
+            NLOptConSettings nloc_settings_mpc = nloc_settings;
+            // ... however, in MPC-mode, it makes sense to limit the overall number of NLOC iterations (real-time iteration scheme)
+            nloc_settings_mpc.max_iterations = 10;
             // and we limited the printouts, too.
-            ilqr_settings_mpc.printSummary = false;
+            nloc_settings_mpc.printSummary = true;
+           
             // 2) settings specific to model predictive control. For a more detailed description of those, visit ct/optcon/mpc/MpcSettings.h
             ct::optcon::mpc_settings mpc_settings;
-            mpc_settings.stateForwardIntegration_ = false;
-            mpc_settings.postTruncation_ = false;
-            mpc_settings.measureDelay_ = false;
+            mpc_settings.stateForwardIntegration_ = true;
+            mpc_settings.postTruncation_ = true;
+            mpc_settings.measureDelay_ = true;
             mpc_settings.delayMeasurementMultiplier_ = 1.0;
             mpc_settings.mpc_mode = ct::optcon::MPC_MODE::CONSTANT_RECEDING_HORIZON;
+            // mpc_settings.minimumTimeHorizonMpc_ = 2;
             mpc_settings.coldStart_ = false;
-            // STEP 2 : Create the iLQR-MPC object, based on the optimal control problem and the selected settings.
-            MPCPtr_t ilqr_mpc(new MPC<NLOptConSolver<state_dim, control_dim>>(optConProblem, ilqr_settings_mpc, mpc_settings));
+            // mpc_settings.stateForwardIntegration_ = false;
+            // mpc_settings.postTruncation_ = false;
+            // mpc_settings.measureDelay_ = false;
+            // mpc_settings.delayMeasurementMultiplier_ = 1.0;
+            // mpc_settings.mpc_mode = ct::optcon::MPC_MODE::CONSTANT_RECEDING_HORIZON;
+            // mpc_settings.coldStart_ = false;
+            // ct::optcon::loadMpcSettings(configDir + "/mpcSolver.info", mpc_settings);
 
-            // initialize it using the previously computed initial controller
-            this->mpc = ilqr_mpc;
+            // STEP 2 : Create the NLOC-MPC object, based on the optimal control problem and the selected settings.
+            MPCPtr_t nloc_mpc(new MPC<NLOptConSolver<state_dim, control_dim>>(optConProblem, nloc_settings_mpc, mpc_settings));
+
+            // initialize it using the previously computed optimal controller
+            this->mpc = nloc_mpc;
             this->mpc->setInitialGuess(solution);
 
         }
+        void plot_solution(){
+            const size_t state_dim = rov::ROV::STATE_DIM;
+            const size_t control_dim = rov::ROV::CONTROL_DIM;
+
+            ct::core::StateFeedbackController<state_dim, control_dim> solution = this->nlop_problem->getSolution();
+
+            plotResultsROV<state_dim, control_dim>(solution.x_ref(),
+                                                   solution.K(),
+                                                   solution.uff(), 
+                                                   solution.time());
+
+            
+        }
+
 
         void pose_message_converter(const geometry_msgs::PoseStamped::ConstPtr & msg,
                                   ct::core::StateVector<rov::ROV::STATE_DIM>& x)
@@ -228,11 +299,11 @@ class LQRController {
         void odom_callback(const nav_msgs::Odometry::ConstPtr & msg){
             if (first_pass_) {
                 first_pass_ =  false;
-                LQRController::odom_message_converter(msg, this->x_now);
+                MPCController::odom_message_converter(msg, this->x_now);
                 return;
             }
 
-            LQRController::odom_message_converter(msg, this->x_now);
+            MPCController::odom_message_converter(msg, this->x_now);
         }
 
 
@@ -243,30 +314,41 @@ class LQRController {
                 if (first_pass_){
                     return;
                 }
-                LQRController::pose_message_converter(msg, this->x_ref);
-                LQRController::create_dynamics();
-                LQRController::update_ilqr_controller(this->x_now, this->x_ref);
+                MPCController::pose_message_converter(msg, this->x_ref);
+                MPCController::create_dynamics();
+                MPCController::update_mpc_controller(this->x_now, this->x_ref);
                 x_ref_current = this->x_ref;
+                // MPCController::plot_solution();
                 controller_not_created_ = false;
                 start_time = ros::Time::now().toSec();
 
                 return; 
             }
 
-            LQRController::pose_message_converter(msg, this->x_ref);
+            MPCController::pose_message_converter(msg, this->x_ref);
             if (x_ref_current == this->x_ref){
                 return;
                 // If the reference is the same as last time received do nothing
             }
             else
             {
-                LQRController::update_ilqr_controller(this->x_now, this->x_ref);
+              
+                this->termQuad_interm->updateReferenceState(this->x_ref);
+                this->termQuad_final->updateReferenceState(this->x_ref);
+                this->costFunc->addIntermediateTerm(this->termQuad_interm);
+                this->costFunc->addFinalTerm(this->termQuad_final);
+                auto solver = this->mpc->getSolver();
+                solver.changeCostFunction(this->costFunc);
+
                 x_ref_current = this->x_ref;
                 start_time = ros::Time::now().toSec();
-                // Otherwise create a new controller that start from current state to new reference point
                 // The internal start time should also updated for the new controller
             }
           
+        }
+
+        void print_mpc_summary(){
+            this->mpc->printMpcSummary();
         }
 
        
@@ -277,17 +359,28 @@ class LQRController {
             }
             const size_t state_dim = rov::ROV::STATE_DIM;
             const size_t control_dim = rov::ROV::CONTROL_DIM;
-        
+
             current_time = ros::Time::now().toSec();
             ct::core::Time t = current_time - start_time;
+       
             this->mpc->prepareIteration(t);
+
             current_time = ros::Time::now().toSec();
             t = current_time - start_time;
-            this->mpc->finishIteration(this->x_now, t, newPolicy, ts_newPolicy);
+
+            bool sovled = this->mpc->finishIteration(this->x_now, t, newPolicy, ts_newPolicy);
+
             current_time = ros::Time::now().toSec();
             t = current_time - start_time;
+            std::cout << "Current time: " << t << " Policy time stamp: " << ts_newPolicy << " Time horizon reached: " << this->mpc->timeHorizonReached() << std::endl;
             ControlVector<control_dim> u;
-            newPolicy.computeControl(this->x_now, t, u);
+            #ifdef DEBUG_MPC
+            saveResultROV<state_dim, control_dim>(newPolicy.x_ref(),
+                                                   newPolicy.K(),
+                                                   newPolicy.uff(), 
+                                                   newPolicy.time());
+            #endif
+            newPolicy.computeControl(this->x_now, t - ts_newPolicy, u);
 
             geometry_msgs::Wrench wrench;
             wrench.force.x = u(0);
@@ -318,10 +411,8 @@ class LQRController {
             MPCPtr_t mpc; 
             PolicyPtr_t newPolicy;
             CostFuncPtr_t costFunc; 
-
-            ct::core::StateMatrix<rov::ROV::STATE_DIM> Q ;
-            ct::core::ControlMatrix<rov::ROV::CONTROL_DIM> R;
-            ct::core::FeedbackMatrix<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM> K;
+            CostFuncADPtr_t costFun;
+            TermPtr_t termQuad_interm, termQuad_final;
 
             double start_time;
             double current_time;  
@@ -345,7 +436,7 @@ int main(int argc, char** argv){
     ros::NodeHandle n;
 
     ros::NodeHandle private_node_handle("~");
-    LQRController mpc_controller  = LQRController(&n);
+    MPCController mpc_controller  = MPCController(&n);
 
     int rate = 50;
     ros::Rate r(rate);
@@ -358,4 +449,6 @@ int main(int argc, char** argv){
         r.sleep();
         
     }
+    mpc_controller.print_mpc_summary();
 }
+
