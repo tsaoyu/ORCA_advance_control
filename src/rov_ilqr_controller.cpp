@@ -86,7 +86,7 @@ class ILQRController {
             ct::core::ADCodegenLinearizer<state_dim, control_dim>(rovdynamicAD));
 
             this->Linearizer = adLinearizer;
-            adLinearizer->compileJIT();
+            this->Linearizer->compileJIT();
 
 
         }
@@ -353,7 +353,7 @@ int main(int argc, char** argv){
     ros::NodeHandle private_node_handle("~");
     ILQRController lqr_controller  = ILQRController(&n);
 
-    int rate = 50;
+    int rate = 20;
     ros::Rate r(rate);
 
     while (n.ok())
