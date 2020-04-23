@@ -1,7 +1,7 @@
 #include <ct/core/core.h>
 #include <ct/optcon/optcon.h>
 #include <ros/ros.h>
-#include "ROVdynamic.h"
+#include "ROVdynamicSim.h"
 #include "ManualController.h"
 
 #include <geometry_msgs/Wrench.h>
@@ -135,9 +135,9 @@ class DynamicSimulator{
             odom.twist.twist.linear.y = x(1); 
             odom.twist.twist.linear.z = x(2); 
 
-            odom.twist.twist.linear.x = x(3);
-            odom.twist.twist.linear.y = x(4); 
-            odom.twist.twist.linear.z = x(5); 
+            odom.twist.twist.angular.x = x(3);
+            odom.twist.twist.angular.y = x(4); 
+            odom.twist.twist.angular.z = x(5); 
 
             odom.pose.pose.position.x = x(6);
             odom.pose.pose.position.y = x(7);
