@@ -90,10 +90,10 @@ class LQRController {
             // Step 3: setup LQR controller 
 
             double t = 0;
-            u(0) = 50;
-            u(1) = 50;
-            u(2) = 50;
-            u(3) = 50; // Linearise around operation point
+            u(0) = 0.5;
+            u(1) = 0.5;
+            u(2) = 0.5;
+            u(3) = 0.5; // Linearise around operation point
 
             auto A = adLinearizer->getDerivativeState(x_init, u, t);
             auto B = adLinearizer->getDerivativeControl(x_init, u, t);
