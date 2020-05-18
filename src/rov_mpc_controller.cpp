@@ -25,9 +25,9 @@ class MPCController {
         typedef ct::core::StateFeedbackController<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM> PolicyPtr_t;
         typedef std::shared_ptr<CostFunctionQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> CostFuncPtr_t;
         typedef std::shared_ptr<CostFunctionAD<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> CostFuncADPtr_t;
-        // typedef std::shared_ptr<TermQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM, double, ct::core::ADCGScalar>> TermPtr_t;
-        typedef std::shared_ptr<ct::optcon::TermQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> TermPtr_t;
-
+        typedef std::shared_ptr<TermQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM, double, ct::core::ADCGScalar>> TermPtr_t;
+        // typedef std::shared_ptr<ct::optcon::TermQuadratic<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> TermPtr_t;
+        typedef std::shared_ptr<ct::optcon::TermSmoothAbs<rov::ROV::STATE_DIM, rov::ROV::CONTROL_DIM>> SmoothTermPtr_t;
 
         MPCController(ros::NodeHandle *n){
             pose_ref_sub = n->subscribe("/pose_ref",10, &MPCController::pose_ref_callback, this);
@@ -103,55 +103,63 @@ class MPCController {
             const size_t state_dim = rov::ROV::STATE_DIM;
             const size_t control_dim = rov::ROV::CONTROL_DIM;
 
-            // TermPtr_t termQuadraticAD_interm(
-            //     new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
-            // TermPtr_t termQuadraticAD_final(
-            //     new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
+            TermPtr_t termQuadraticAD_interm(
+                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
+            TermPtr_t termQuadraticAD_final(
+                new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
 
-            // this->termQuad_interm = termQuadraticAD_interm;
-            // this->termQuad_final = termQuadraticAD_final;
+            this->termQuad_interm = termQuadraticAD_interm;
+            this->termQuad_final = termQuadraticAD_final;
 
-            // this->termQuad_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
-            // this->termQuad_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
-            // this->termQuad_interm->updateReferenceState(this->x_ref);
-            // this->termQuad_final->updateReferenceState(this->x_ref);
-            
-            // CostFuncADPtr_t costFunctionAD (new CostFunctionAD<state_dim, control_dim>());
-
-
-            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
-                new ct::optcon::TermQuadratic<state_dim, control_dim>());
-            std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> finalCost(
-                new ct::optcon::TermQuadratic<state_dim, control_dim>());
-            this->termQuad_interm = intermediateCost;
-            this->termQuad_final = finalCost;
             this->termQuad_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
             this->termQuad_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
             this->termQuad_interm->updateReferenceState(this->x_ref);
             this->termQuad_final->updateReferenceState(this->x_ref);
-
             
-            CostFuncPtr_t costFunction(
-                new CostFunctionAnalytical<state_dim, control_dim>());
-            this->costFunc = costFunction;
-
-            this->costFunc->addIntermediateTerm(this->termQuad_interm);
-            this->costFunc->addFinalTerm(this->termQuad_final);
-
-            // this->costFun = costFunctionAD;
-
-            // // std::shared_ptr<CostFunctionQuadratic<state_dim, control_dim>> costFunction(
-            // //     new CostFunctionQuadraticSimple<state_dim, control_dim>());
-            // this->costFun->addIntermediateADTerm(this->termQuad_interm);
-            // this->costFun->addFinalADTerm(this->termQuad_final);
+            CostFuncADPtr_t costFunctionAD (new CostFunctionAD<state_dim, control_dim>());
+            this->costFuncAD = costFunctionAD;
+            this->costFuncAD->addIntermediateADTerm(this->termQuad_interm);
+            this->costFuncAD->addFinalADTerm(this->termQuad_final);
             
-            // this->costFun->initialize();
+            this->costFuncAD->initialize();
 
+
+            // std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
+            //     new ct::optcon::TermQuadratic<state_dim, control_dim>());
+            // std::shared_ptr<ct::optcon::TermSmoothAbs<state_dim, control_dim>> intermediateSmoothCost(
+            //     new ct::optcon::TermSmoothAbs<state_dim, control_dim>());
+            // std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> finalCost(
+            //     new ct::optcon::TermQuadratic<state_dim, control_dim>());
+
+            // this->termQuad_interm = intermediateCost;
+            // this->termSmooth_interm = intermediateSmoothCost;
+            // this->termQuad_final = finalCost;
+
+            // this->termQuad_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
+            // this->termSmooth_interm->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateSmoothCost");
+            // this->termQuad_final->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
+
+            // this->termQuad_interm->updateReferenceState(this->x_ref);
+            // this->termSmooth_interm->updateReferenceState(this->x_ref);
+            // this->termQuad_final->updateReferenceState(this->x_ref);
+            
+            // CostFuncPtr_t costFunction( new CostFunctionAnalytical<state_dim, control_dim>());
+
+            //this->costFunc = costFunction;
+
+            //this->costFunc->addIntermediateTerm(this->termQuad_interm);
+            //this->costFunc->addIntermediateTerm(this->termSmooth_interm);
+            //this->costFunc->addFinalTerm(this->termSmooth_interm);
+            //this->costFunc->addFinalTerm(this->termQuad_final);
+            
 
             ControlVector<control_dim> ulow;
             ControlVector<control_dim> uhigh;
-            ulow  << -100, -100,  -100,  -100;
-            uhigh <<  100,  100 ,  100,   100;
+            ulow  << -1, -1 , -1,  -1;
+            uhigh <<  1,  1 ,  1,   1;
+            // ulow  << -100, -100,  -100,  -100;
+            // uhigh <<  100,  100 ,  100,   100;
+
 
             std::shared_ptr<ct::optcon::ControlInputConstraint<state_dim, control_dim>> controlInputBound(
                 new ct::optcon::ControlInputConstraint<state_dim, control_dim>(ulow, uhigh));
@@ -162,9 +170,12 @@ class MPCController {
             inputBoxConstraints->addIntermediateConstraint(controlInputBound, false);
             // Step 3: setup MPC controller
 
-            ct::core::Time timeHorizon = 3.0;
+            float timeH;
+            ct::core::loadScalar<float>(configDir + "/ilqr_nloc.info", "Horizon", timeH, "time");
+            ct::core::Time timeHorizon = timeH;
+
             ContinuousOptConProblem<state_dim, control_dim> optConProblem(
-                timeHorizon, x_init, this->rovdynamics, this->costFunc, this->Linearizer);
+                timeHorizon, x_init, this->rovdynamics, this->costFuncAD, this->Linearizer);
             optConProblem.setInputBoxConstraints(inputBoxConstraints);
 
             NLOptConSettings nloc_settings;
@@ -173,10 +184,10 @@ class MPCController {
             size_t N = nloc_settings.computeK(timeHorizon);
             FeedbackArray<state_dim, control_dim> u0_fb(N, FeedbackMatrix<state_dim, control_dim>::Zero());
             ControlVector<control_dim> u0;
-            u0(0)=20;
-            u0(1)=20;
-            u0(2)=20;
-            u0(3)=20;
+            u0(0)=0.2;
+            u0(1)=0.2;
+            u0(2)=0.2;
+            u0(3)=0.2;
             ControlVectorArray<control_dim> u0_ff(N, u0);
             StateVectorArray<state_dim> x_ref_init(N + 1, x_init);
             NLOptConSolver<state_dim, control_dim>::Policy_t initController(x_ref_init, u0_ff, u0_fb, nloc_settings.dt);
@@ -195,20 +206,14 @@ class MPCController {
            
             // 2) settings specific to model predictive control. For a more detailed description of those, visit ct/optcon/mpc/MpcSettings.h
             ct::optcon::mpc_settings mpc_settings;
-            mpc_settings.stateForwardIntegration_ = true;
-            mpc_settings.postTruncation_ = true;
-            mpc_settings.measureDelay_ = true;
-            mpc_settings.delayMeasurementMultiplier_ = 1.0;
-            mpc_settings.mpc_mode = ct::optcon::MPC_MODE::CONSTANT_RECEDING_HORIZON;
-            // mpc_settings.minimumTimeHorizonMpc_ = 2;
-            mpc_settings.coldStart_ = false;
-            // mpc_settings.stateForwardIntegration_ = false;
-            // mpc_settings.postTruncation_ = false;
-            // mpc_settings.measureDelay_ = false;
+            // mpc_settings.stateForwardIntegration_ = true;
+            // mpc_settings.postTruncation_ = true;
+            // mpc_settings.measureDelay_ = true;
             // mpc_settings.delayMeasurementMultiplier_ = 1.0;
             // mpc_settings.mpc_mode = ct::optcon::MPC_MODE::CONSTANT_RECEDING_HORIZON;
+            // // mpc_settings.minimumTimeHorizonMpc_ = 2;
             // mpc_settings.coldStart_ = false;
-            // ct::optcon::loadMpcSettings(configDir + "/mpcSolver.info", mpc_settings);
+            ct::optcon::loadMpcSettings(configDir + "/mpcSolver.info", mpc_settings);
 
             // STEP 2 : Create the NLOC-MPC object, based on the optimal control problem and the selected settings.
             MPCPtr_t nloc_mpc(new MPC<NLOptConSolver<state_dim, control_dim>>(optConProblem, nloc_settings_mpc, mpc_settings));
@@ -334,11 +339,20 @@ class MPCController {
             {
               
                 this->termQuad_interm->updateReferenceState(this->x_ref);
+                //this->termSmooth_interm->updateReferenceState(this->x_ref);
                 this->termQuad_final->updateReferenceState(this->x_ref);
-                this->costFunc->addIntermediateTerm(this->termQuad_interm);
-                this->costFunc->addFinalTerm(this->termQuad_final);
+
+                //this->costFunc->addIntermediateTerm(this->termQuad_interm);
+                //this->costFunc->addIntermediateTerm(this->termSmooth_interm);
+                //this->costFunc->addFinalTerm(this->termSmooth_interm);
+                //this->costFunc->addFinalTerm(this->termQuad_final);
+                
+                this->costFuncAD->addIntermediateADTerm(this->termQuad_interm);
+                this->costFuncAD->addFinalADTerm(this->termQuad_interm);
+
+                this->costFuncAD->initialize();
                 auto solver = this->mpc->getSolver();
-                solver.changeCostFunction(this->costFunc);
+                solver.changeCostFunction(this->costFuncAD);
 
                 x_ref_current = this->x_ref;
                 start_time = ros::Time::now().toSec();
@@ -368,13 +382,14 @@ class MPCController {
             current_time = ros::Time::now().toSec();
             t = current_time - start_time;
 
-            bool sovled = this->mpc->finishIteration(this->x_now, t, newPolicy, ts_newPolicy);
+            this->mpc->finishIteration(this->x_now, t, newPolicy, ts_newPolicy);
 
             current_time = ros::Time::now().toSec();
             t = current_time - start_time;
-            std::cout << "Current time: " << t << " Policy time stamp: " << ts_newPolicy << " Time horizon reached: " << this->mpc->timeHorizonReached() << std::endl;
             ControlVector<control_dim> u;
             #ifdef DEBUG_MPC
+            std::cout << "Current time: " << t << " Policy time stamp: " << ts_newPolicy << " Time horizon reached: " << this->mpc->timeHorizonReached() << std::endl;
+
             saveResultROV<state_dim, control_dim>(newPolicy.x_ref(),
                                                    newPolicy.K(),
                                                    newPolicy.uff(), 
@@ -411,9 +426,9 @@ class MPCController {
             MPCPtr_t mpc; 
             PolicyPtr_t newPolicy;
             CostFuncPtr_t costFunc; 
-            CostFuncADPtr_t costFun;
+            CostFuncADPtr_t costFuncAD;
             TermPtr_t termQuad_interm, termQuad_final;
-
+            SmoothTermPtr_t termSmooth_interm;
             double start_time;
             double current_time;  
             bool first_pass_ = true;
