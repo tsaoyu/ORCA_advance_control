@@ -344,7 +344,8 @@ class MPCController {
                 this->costFunc->addFinalTerm(this->termQuad_final);
                      
                 auto solver = this->mpc->getSolver();
-                solver.changeCostFunction(this->costFuncAD);
+                //solver.changeCostFunction(this->costFuncAD);
+                solver.changeCostFunction(this->costFunc);
 
                 x_ref_current = this->x_ref;
                 start_time = ros::Time::now().toSec();
