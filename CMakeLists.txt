@@ -152,7 +152,7 @@ add_executable(rov_dynamics_node src/rov_dynamics_node.cpp)
 add_executable(rov_lqr_controller_node src/rov_lqr_controller.cpp)
 add_executable(rov_ilqr_controller_node src/rov_ilqr_controller.cpp)
 add_executable(rov_mpc_controller_node src/rov_mpc_controller.cpp)
-add_executable(rov_lqr_test_node src/LQR_controller.cpp)
+
 
 
 ## Rename C++ executable without prefix
@@ -183,10 +183,6 @@ target_link_libraries(rov_mpc_controller_node
   ${catkin_LIBRARIES} ct_optcon 
 )
 
-
-target_link_libraries(rov_lqr_test_node
-  ${catkin_LIBRARIES} ct_optcon 
-)
 
 
 
