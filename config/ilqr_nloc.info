@@ -1,12 +1,14 @@
+timeHorizon 4
+
 ilqr
 {
-    nlocp_algorithm GNMS_M_OL
+    nlocp_algorithm GNMS
     integrator RK4
     useSensitivityIntegrator false
     discretization Forward_euler
-    timeVaryingDiscretization false
+    timeVaryingDiscretization true
     dt 0.02
-    K_sim 10
+    K_sim 4
     K_shot 1
     epsilon 0
     max_iterations 100
@@ -14,28 +16,28 @@ ilqr
     recordSmallestEigenvalue false
     min_cost_improvement 1e-5
     maxDefectSum 1e-5
-    meritFunctionRho 0.0
-    meritFunctionRhoConstraints 0.0
-    nThreads 8
-    nThreadsEigen 8
+    meritFunctionRho 0
+    meritFunctionRhoConstraints 0
+    nThreads 4
+    nThreadsEigen 4
     locp_solver HPIPM_SOLVER
-    printSummary true
-    debugPrint true 
+    printSummary false
+    debugPrint false 
     logToMatlab 0   
     
     line_search
     {
-        type ARMIJO
-        adaptive false
-        maxIterations 12
+        type NONE
+        adaptive true
+        maxIterations 15
         alpha_0 1.0
         n_alpha 0.5
-        debugPrint true
+        debugPrint false
     }
 
     lqoc_solver_settings
     {
-        lqoc_debug_print        true
+        lqoc_debug_print        false
         num_lqoc_iterations  	100
     }
 }
