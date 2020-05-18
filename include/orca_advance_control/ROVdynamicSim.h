@@ -57,10 +57,10 @@ public:
         // see https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors6DOF.cpp
 
 
-        SCALAR X = a(0)/100;
-        SCALAR Y = a(1)/100;
-        SCALAR Z = a(2)/100;
-        SCALAR yaw = a(3)/100;
+        SCALAR X = a(0);
+        SCALAR Y = a(1);
+        SCALAR Z = a(2);
+        SCALAR yaw = a(3);
 
 
         SCALAR cpsi = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi);
