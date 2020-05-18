@@ -1,15 +1,15 @@
 mpc
 {
     stateForwardIntegration  true
-    stateForwardIntegration_dt 0.1
+    stateForwardIntegration_dt 0.01
     stateForwardIntegratorType 0
-    fixedDelayUs 0
     additionalDelayUs 0
-    timeHorizon 5
+    fixedDelayUs 0
+    timeHorizon 3
     postTruncation  true
     measureDelay true
     delayMeasurementMultiplier 1.0
-    mpc_mode FIXED_FINAL_TIME
+    mpc_mode CONSTANT_RECEDING_HORIZON
     coldStart false
     useExternalTiming false
 }
