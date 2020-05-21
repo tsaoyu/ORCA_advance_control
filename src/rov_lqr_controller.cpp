@@ -15,7 +15,9 @@ template <typename T> int sgn(T val) {
     return (T(0) < val) - (val < T(0));
 }
 
-
+float clip(float n, float lower, float upper) {
+  return std::max(lower, std::min(n, upper));
+}
 
 class LQRController {
 
@@ -232,36 +234,13 @@ class LQRController {
             ct::core::Time t = current_time - start_time;
             t_now = t;
 
-            // auto A = this->Linearizer->getDerivativeState(this->x_now, u, t_now);
-            // auto B = this->Linearizer->getDerivativeControl(this->x_now, u, t_now);
-            // std::cout << "A matrix is: "<< "\n" << A << "\n";
-            // std::cout << "B matrix is: "<< "\n" << B << "\n" ;
-
-            // std::cout << "Previous control: " << u << "\n";
-            // std::cout << "State: " << this->x_now << "\n";
-            // std::cout << "Reference: " << this->x_ref << "\n";  
-
-            
-            // ct::optcon::LQR<state_dim, control_dim> lqrSolver;
-            // lqrSolver.compute(Q, R, A, B, K);
-            // std::cout << "LQR gain matrix (controller):" << std::endl << K << std::endl;
-            // ct::core::StateVector<rov::ROV::STATE_DIM> x_error = this->x_ref - this->x_now;
-            // x_error(0) = 0;
-            // x_error(1) = 0;
-            // x_error(2) = 0;
-            // x_error(3) = 0;
-            // x_error(4) = 0;
-            // x_error(5) = 0;
-
-        
             u = K * (this->x_ref - this->x_now);
-            // u = K * x_error;
-            // std::cout << "Current control: " << u << "\n";
+
             geometry_msgs::Wrench wrench;
-            wrench.force.x = u(0);
-            wrench.force.y = u(1);
-            wrench.force.z = u(2);
-            wrench.torque.z = u(3);
+            wrench.force.x = clip(u(0), -1, 1);
+            wrench.force.y = clip(u(1), -1, 1);
+            wrench.force.z = clip(u(2), -1, 1);
+            wrench.torque.z = clip(u(3),-1, 1);
 
             cmd_wrench_pub.publish(wrench);
         }

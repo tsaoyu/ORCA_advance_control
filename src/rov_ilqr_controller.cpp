@@ -97,16 +97,6 @@ class ILQRController {
             const size_t state_dim = rov::ROV::STATE_DIM;
             const size_t control_dim = rov::ROV::CONTROL_DIM;
 
-            // std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> intermediateCost(
-            //     new ct::optcon::TermQuadratic<state_dim, control_dim>());
-            // std::shared_ptr<ct::optcon::TermQuadratic<state_dim, control_dim>> finalCost(
-            //     new ct::optcon::TermQuadratic<state_dim, control_dim>());
-
-            // intermediateCost->loadConfigFile(configDir + "/ilqr_Cost.info", "intermediateCost");
-            // finalCost->loadConfigFile(configDir + "/ilqr_Cost.info", "finalCost");
-            // intermediateCost->updateReferenceState(this->x_ref);
-            // finalCost->updateReferenceState(this->x_ref);
-            
             std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_interm(
                 new TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>);
             std::shared_ptr<TermQuadratic<state_dim, control_dim, double, ct::core::ADCGScalar>> termQuadraticAD_final(
@@ -127,14 +117,26 @@ class ILQRController {
             
             costFunctionAD->initialize();
 
+            ControlVector<control_dim> ulow;
+            ControlVector<control_dim> uhigh;
+            ulow  << -1, -1 , -1,  -1;
+            uhigh <<  1,  1 ,  1,   1;
+
+            std::shared_ptr<ct::optcon::ControlInputConstraint<state_dim, control_dim>> controlInputBound(
+                new ct::optcon::ControlInputConstraint<state_dim, control_dim>(ulow, uhigh));
+            
+            std::shared_ptr<ConstraintContainerAnalytical<state_dim, control_dim>> inputBoxConstraints(
+                 new ct::optcon::ConstraintContainerAnalytical<state_dim, control_dim>());
+            
+            inputBoxConstraints->addIntermediateConstraint(controlInputBound, false);
+
 
             // Step 3: setup iLQR controller
 
             ct::core::Time timeHorizon = 5.0;
             ContinuousOptConProblem<state_dim, control_dim> optConProblem(
                 timeHorizon, x_init, this->rovdynamics, costFunctionAD, this->Linearizer);
-
-            std::cout << x_init << std::endl;
+            optConProblem.setInputBoxConstraints(inputBoxConstraints);
 
             NLOptConSettings nloc_settings;
             nloc_settings.load(configDir + "/ilqr_nloc.info", true, "ilqr");
@@ -142,10 +144,10 @@ class ILQRController {
             size_t N = nloc_settings.computeK(timeHorizon);
             FeedbackArray<state_dim, control_dim> u0_fb(N, FeedbackMatrix<state_dim, control_dim>::Zero());
             ControlVector<control_dim> u0;
-            u0(0)=20;
-            u0(1)=20;
-            u0(2)=20;
-            u0(3)=20;
+            u0(0)=0.2;
+            u0(1)=0.2;
+            u0(2)=0.2;
+            u0(3)=0.2;
             ControlVectorArray<control_dim> u0_ff(N, u0);
             StateVectorArray<state_dim> x_ref_init(N + 1, x_init);
             NLOptConSolver<state_dim, control_dim>::Policy_t initController(x_ref_init, u0_ff, u0_fb, nloc_settings.dt);

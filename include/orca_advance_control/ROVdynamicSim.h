@@ -52,15 +52,15 @@ public:
         
 
         // Thruster model 
-        // normalised control command between -100 and 100
+        // normalised control command between -1 to 1
         // Forward (X), Lateral(Y), Throttle(Z) and Yaw(yaw)
         // see https://github.com/ArduPilot/ardupilot/blob/master/libraries/AP_Motors/AP_Motors6DOF.cpp
 
 
-        SCALAR X = a(0);
-        SCALAR Y = a(1);
-        SCALAR Z = a(2);
-        SCALAR yaw = a(3);
+        SCALAR X =   -a(0);
+        SCALAR Y =   -a(1);
+        SCALAR Z =   -a(2);
+        SCALAR yaw = -a(3);
 
 
         SCALAR cpsi = ct::core::tpl::TraitSelector<SCALAR>::Trait::cos(psi);
