@@ -1,4 +1,4 @@
-timeHorizon 4
+timeHorizon 2.5
 
 ilqr
 {
@@ -14,8 +14,8 @@ ilqr
     max_iterations 100
     fixedHessianCorrection false
     recordSmallestEigenvalue false
-    min_cost_improvement 1e-5
-    maxDefectSum 1e-5
+    min_cost_improvement 1e-8
+    maxDefectSum 1e-8
     meritFunctionRho 0
     meritFunctionRhoConstraints 0
     nThreads 4
