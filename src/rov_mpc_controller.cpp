@@ -179,10 +179,10 @@ class MPCController {
             size_t N = nloc_settings.computeK(timeHorizon);
             FeedbackArray<state_dim, control_dim> u0_fb(N, FeedbackMatrix<state_dim, control_dim>::Zero());
             ControlVector<control_dim> u0;
-            u0(0)=0.2;
-            u0(1)=0.2;
-            u0(2)=0.2;
-            u0(3)=0.2;
+            u0(0)=-0.2;
+            u0(1)=-0.2;
+            u0(2)=-0.2;
+            u0(3)=-0.2;
             ControlVectorArray<control_dim> u0_ff(N, u0);
             StateVectorArray<state_dim> x_ref_init(N + 1, x_init);
             NLOptConSolver<state_dim, control_dim>::Policy_t initController(x_ref_init, u0_ff, u0_fb, nloc_settings.dt);
