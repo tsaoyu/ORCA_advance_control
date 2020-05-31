@@ -5,11 +5,11 @@ mpc
     stateForwardIntegratorType 0
     additionalDelayUs 0
     fixedDelayUs 0
-    timeHorizon 3
+    timeHorizon 1
     postTruncation  true
     measureDelay true
     delayMeasurementMultiplier 1.0
-    mpc_mode CONSTANT_RECEDING_HORIZON
+    mpc_mode FIXED_FINAL_TIME
     coldStart false
     useExternalTiming false
 }

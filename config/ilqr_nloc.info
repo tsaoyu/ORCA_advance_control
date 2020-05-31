@@ -1,14 +1,14 @@
-timeHorizon 2.5
+timeHorizon 2
 
 ilqr
 {
-    nlocp_algorithm GNMS
+    nlocp_algorithm GNMS_M_OL
     integrator RK4
-    useSensitivityIntegrator false
+    useSensitivityIntegrator true
     discretization Forward_euler
     timeVaryingDiscretization true
     dt 0.02
-    K_sim 4
+    K_sim 16
     K_shot 1
     epsilon 0
     max_iterations 100
@@ -18,8 +18,8 @@ ilqr
     maxDefectSum 1e-8
     meritFunctionRho 0
     meritFunctionRhoConstraints 0
-    nThreads 4
-    nThreadsEigen 4
+    nThreads 16
+    nThreadsEigen 16
     locp_solver HPIPM_SOLVER
     printSummary false
     debugPrint false 

@@ -24,7 +24,7 @@ intermediateCost
       }
       R
       {
-        scaling 4
+        scaling 0.1
         (0,0) 1
         (1,1) 1
         (2,2) 1
@@ -41,42 +41,6 @@ intermediateCost
 }
 
 
-intermediateSmoothCost
-{
-    name "final cost quadratic"
-    kind "quadratic"   
-    type 1              ; 0 = intermediate, 1 = final
-
-    weights
-    {
-      Q
-      {
-        
-        scaling 200.0
-        (0,0)   0
-        (1,1)   0
-        (2,2)   0
-        (3,3)   0
-        (4,4)   0
-        (5,5)   0
-        (6,6)   1
-        (7,7)   1
-        (8,8)   1
-        (9,9)   1
-        (10,10) 1
-        (11,11) 1
-      }
-      R
-      {
-        scaling 0.01
-        (0,0) 1
-        (1,1) 1
-        (2,2) 1
-        (3,3) 1
-      }
-    }
-}
-
 
 
 
@@ -90,7 +54,7 @@ finalCost
     {
       a
       {
-        scaling 500
+        scaling 10000
         (0,0)  0
         (1,0)  0
         (2,0)  0
@@ -114,9 +78,44 @@ finalCost
       }
 
 
-      alpha 0.01
+      alpha 0.1
      
     }
 }
 
 
+intermediateSmoothCost
+{
+    name "final cost quadratic"
+    kind "quadratic"   
+    type 1              ; 0 = intermediate, 1 = final
+
+    weights
+    {
+      Q
+      {
+        
+        scaling 10000.0
+        (0,0)   0
+        (1,1)   0
+        (2,2)   0
+        (3,3)   0
+        (4,4)   0
+        (5,5)   0
+        (6,6)   1
+        (7,7)   1
+        (8,8)   1
+        (9,9)   0
+        (10,10) 0
+        (11,11) 1
+      }
+      R
+      {
+        scaling 0.01
+        (0,0) 1
+        (1,1) 1
+        (2,2) 1
+        (3,3) 1
+      }
+    }
+}
