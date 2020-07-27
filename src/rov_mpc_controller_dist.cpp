@@ -31,7 +31,7 @@ class MPCController {
 
         MPCController(ros::NodeHandle *n){
             pose_ref_sub = n->subscribe("/pose_ref",10, &MPCController::pose_ref_callback, this);
-            cmd_wrench_pub = n->advertise<geometry_msgs::Wrench>("/cmd_wrench", 10);
+            cmd_wrench_pub = n->advertise<geometry_msgs::Wrench>("/cmd_wrench_mpc", 10);
             odom_sub = n->subscribe("/BodyROV01/odom", 10, &MPCController::odom_callback, this);
             disturbance_sub = n->subscribe("/disturbance", 10, &MPCController::disturbance_callback, this);
         }

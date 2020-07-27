@@ -27,7 +27,7 @@ class LQRController {
 
         LQRController(ros::NodeHandle *n){
             pose_ref_sub = n->subscribe("/pose_ref",10, &LQRController::pose_ref_callback, this);
-            cmd_wrench_pub = n->advertise<geometry_msgs::Wrench>("/cmd_wrench", 10);
+            cmd_wrench_pub = n->advertise<geometry_msgs::Wrench>("/cmd_wrench_lqr", 10);
             odom_sub = n->subscribe("/BodyROV01/odom", 10, &LQRController::odom_callback, this);
         }
 
