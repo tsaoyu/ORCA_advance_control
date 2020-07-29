@@ -8,7 +8,7 @@ intermediateCost
     {
       Q
       {
-        scaling 1
+        scaling 10
         (0,0)   10
         (1,1)   10
         (2,2)   26
