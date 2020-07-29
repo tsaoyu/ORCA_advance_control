@@ -9,6 +9,6 @@ Require full ROS network setting and real hardware. -->
     <machine name="top" address="192.168.2.1" user="$(arg TOP_NAME)" env-loader="/home/$(arg TOP_NAME)/ORCA_control/redrov/src/redrov_missions/scripts/$(arg TOP_NAME)_setup.bash"/>
     <machine name="rov" address="192.168.2.2" user="$(arg ROV_NAME)" env-loader="/home/$(arg ROV_NAME)/ORCA_control/redrov/src/redrov_missions/scripts/$(arg ROV_NAME)_setup.bash"/>
 
-    <node machine="top" pkg="orca_advance_control" name="rov_mpc_controller_node" type="rov_mpc_controller_node" output="screen"/>
+    <node machine="top" pkg="orca_advance_control" name="rov_lqr_controller_node" type="rov_lqr_controller_node" output="screen"/>
 
 </launch>
